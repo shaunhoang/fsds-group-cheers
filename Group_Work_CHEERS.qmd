@@ -109,7 +109,6 @@ else:
 ## 1. Who collected the data?
 
 ::: {.duedate}
-hello world
 
 ( 2 points; Answer due Week 7 )
 
