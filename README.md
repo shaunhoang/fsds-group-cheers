@@ -1,2 +1,2 @@
 # fsds-group-cheers
-Repository for FSDS group project on inside-airbnb.com data
+Repository for FSDS group project on insideairbnb.com data
