@@ -1,7 +1,7 @@
 ---
 bibliography: bio.bib
 csl: harvard-cite-them-right.csl
-title: Group Name's Group Project
+title: CHEERUP's FSDS Group Project
 execute:
   echo: false
 format:
@@ -67,7 +67,6 @@ Student Numbers:
 
 Are there any areas on which you would appreciate more detailed feedback if we're able to offer it?
 
-
 {{< pagebreak >}}
 
 # Response to Questions
@@ -92,11 +91,6 @@ else:
 
 ## 1. Who collected the data?
 
-::: {.duedate}
-
-( 2 points; Answer due Week 7 )
-
-:::
 
 An inline citation: As discussed on @insideairbnb, there are many...
 
@@ -105,9 +99,7 @@ A parenthetical citation: There are many ways to research Airbnb [see, for examp
 ## 2. Why did they collect it?
 
 ::: {.duedate}
-
 ( 4 points; Answer due Week 7 )
-
 :::
 
 ```{python}
