@@ -97,15 +97,15 @@ df = pd.read_csv(os.path.join('data','listings.csv.gz'), compression='gzip', low
 
 ## 1. Who collected the data?
 
-Inside Airbnb was founded by Murray Cox, an artist, activist and technologist who conceived the project, compiled and analyzed the data and built the site.
+Inside Airbnb was founded by Murray Cox, an artist, activist and technologist who conceived the project, compiled and analyzed the data and built the site. @insideairbnb
+ 
 
 ## 2. Why did they collect it?
 
 - To increase transparency about Airbnb. Inside Airbnb wants to make it easier for people to understand how Airbnb is affecting their communities.
 - To hold Airbnb accountable for its impact. Inside Airbnb wants Airbnb to be more transparent about its data and to take steps to mitigate the negative impacts of its busines
 - 
-To promote responsible short-term rentals. Inside Airbnb believes that short-term rentals can be a positive thing for communities, but it believes that they need to be regulated to ensure that they are not harming local residents.
-
+To promote responsible short-term rentals. Inside Airbnb believes that short-term rentals can be a positive thing for communities, but it believes that they need to be regulated to ensure that they are not harming local residen.
 
 ```{python}
 print(f"Data frame is {df.shape[0]:,} x {df.shape[1]:,}")
