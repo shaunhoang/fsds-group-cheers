@@ -118,19 +118,15 @@ ax.set_xlim([0,500]);
 
 ## 3. How was the data collected?  
 
-::: {.duedate}
-
-( 5 points; Answer due Week 8 )
-
-:::
+Inside Airbnb uses web scraping scripts to extract information from Airbnb's website. These scripts navigate through the Airbnb site, access pages, and get data such as listings, hosts, pricing, etc. The collected data is then processed and made available on the Inside Airbnb website for users to explore and analyze.
 
 ## 4. How does the method of collection impact the completeness and/or accuracy of its representation of the process it seeks to study, and what wider issues does this raise?
 
-::: {.duedate}
-
-( 11 points; Answer due Week 9 )
-
-:::
+1. Pricing and availability among others are extremely dynamic attributes set by hosts that cannot be captured accurately with webscraping, which only reflects a snapshot of the website at one specific moment in time.
+2. Susceptible to changes in the structure of the website.
+3. Web scraping only accesses pubicly available listings.
+4. Too frequent web scraping may affect site performance which in turns affect the data scraped
+5. Has to ethical and legal implications
 
 ## 5. What ethical considerations does the use of this data raise? 
 
