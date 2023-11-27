@@ -90,22 +90,21 @@ import pandas as pd
 ```
 
 ```{python}
-# Read file in the data folder. The file is extracted from insideairbnb.com on Nov 13, 2023
+# Read the file in the data folder. The file is extracted from insideairbnb.com on Nov 13, 2023
 
 df = pd.read_csv(os.path.join('data','listings.csv.gz'), compression='gzip', low_memory=False)
 ```
 
 ## 1. Who collected the data?
 
-Inside Airbnb was founded by Murray Cox, an artist, activist and technologist who conceived the project, compiled and analyzed the data and built the site. @insideairbnb
+Inside Airbnb was founded by Murray Cox, an artist, activist, and technologist who conceived the project, compiled and analyzed the data, and built the site. @insideairbnb
  
 
 ## 2. Why did they collect it?
 
 - To increase transparency about Airbnb. Inside Airbnb wants to make it easier for people to understand how Airbnb is affecting their communities.
-- To hold Airbnb accountable for its impact. Inside Airbnb wants Airbnb to be more transparent about its data and to take steps to mitigate the negative impacts of its busines
-- 
-To promote responsible short-term rentals. Inside Airbnb believes that short-term rentals can be a positive thing for communities, but it believes that they need to be regulated to ensure that they are not harming local residen.
+- To hold Airbnb accountable for its impact. Inside Airbnb wants Airbnb to be more transparent about its data and to take steps to mitigate the negative impacts of its business
+- To promote responsible short-term rentals. Inside Airbnb believes that short-term rentals can be a positive thing for communities, but it believes that they need to be regulated to ensure that they are not harming local residents.
 
 ```{python}
 print(f"Data frame is {df.shape[0]:,} x {df.shape[1]:,}")
@@ -120,15 +119,15 @@ ax.set_xlim([0,500]);
 
 Inside Airbnb uses web scraping scripts to extract publicly available information from Airbnb's website on a quarterly basis. These scripts go through the Airbnb site, access pages, and get data such as listing titles, descriptions, hosts, pricing, etc. The collected data is then verified, cleaned, and made available on the Inside Airbnb website for users to explore on the website, or download and analyze. 
 
-Beyond providing a snapshot, InsideAirbnb also conducts deeper analyses with this raw data to derive more insightful data to users. For example, InsideAirbnb also uses a priopriety "San Francisco Model" to estimate how often an Airbnb listing is being rented out and also approximate a listing's income.
+Beyond providing a snapshot, InsideAirbnb also conducts deeper analyses with this raw data to derive more insightful data for users. For example, InsideAirbnb also uses a proprietary "San Francisco Model" to estimate how often an Airbnb listing is being rented out and also approximate a listing's income.
 
 ## 4. How does the method of collection impact the completeness and/or accuracy of its representation of the process it seeks to study, and what wider issues does this raise?
 
 1. Pricing and availability among others are extremely dynamic attributes set by hosts that cannot be captured accurately with webscraping, which only reflects a snapshot of the website at one specific moment in time.
 2. Susceptible to changes in the structure of the website.
-3. Web scraping only accesses pubicly available listings.
-4. Too frequent web scraping may affect site performance which in turns affect the data scraped
-5. Has to ethical and legal implications
+3. Web scraping only accesses publicly available listings.
+4. Too frequent web scraping may affect site performance which in turn affects the data scraped
+5. Has ethical and legal implications with regard to data privacy
 
 ## 5. What ethical considerations does the use of this data raise? 
 
