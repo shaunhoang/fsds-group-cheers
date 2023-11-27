@@ -118,7 +118,9 @@ ax.set_xlim([0,500]);
 
 ## 3. How was the data collected?  
 
-Inside Airbnb uses web scraping scripts to extract information from Airbnb's website. These scripts navigate through the Airbnb site, access pages, and get data such as listings, hosts, pricing, etc. The collected data is then processed and made available on the Inside Airbnb website for users to explore and analyze.
+Inside Airbnb uses web scraping scripts to extract publicly available information from Airbnb's website on a quarterly basis. These scripts go through the Airbnb site, access pages, and get data such as listing titles, descriptions, hosts, pricing, etc. The collected data is then verified, cleaned, and made available on the Inside Airbnb website for users to explore on the website, or download and analyze. 
+
+Beyond providing a snapshot, InsideAirbnb also conducts deeper analyses with this raw data to derive more insightful data to users. For example, InsideAirbnb also uses a priopriety "San Francisco Model" to estimate how often an Airbnb listing is being rented out and also approximate a listing's income.
 
 ## 4. How does the method of collection impact the completeness and/or accuracy of its representation of the process it seeks to study, and what wider issues does this raise?
 
