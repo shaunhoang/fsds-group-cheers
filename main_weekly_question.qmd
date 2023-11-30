@@ -129,7 +129,7 @@ Beyond providing a snapshot, InsideAirbnb also conducts deeper analyses with thi
 3. Web scraping only accesses pubicly available listings.
 4. Too frequent web scraping may affect site performance which in turns affect the data scraped
 5. Has to ethical and legal implications
-
+6. Data capture can only capture real-time airbnb data, and long-term comparative analysis requires data collection in advance
 ## 5. What ethical considerations does the use of this data raise? 
 
 ::: {.duedate}
