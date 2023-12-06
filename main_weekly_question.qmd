@@ -97,15 +97,14 @@ df = pd.read_csv(os.path.join('data','listings.csv.gz'), compression='gzip', low
 
 ## 1. Who collected the data?
 
-Inside Airbnb was founded by Murray Cox, an artist, activist and technologist who conceived the project, compiled and analyzed the data and built the site. @insideairbnb
+Inside Airbnb was founded by Murray Cox who conceived the project, and keeps updating and analyzing Airbnb data (*About Inside Airbnb*, no date). 
  
 
 ## 2. Why did they collect it?
 
-- To increase transparency about Airbnb. Inside Airbnb wants to make it easier for people to understand how Airbnb is affecting their communities.
-- To hold Airbnb accountable for its impact. Inside Airbnb wants Airbnb to be more transparent about its data and to take steps to mitigate the negative impacts of its busines
-- 
-To promote responsible short-term rentals. Inside Airbnb believes that short-term rentals can be a positive thing for communities, but it believes that they need to be regulated to ensure that they are not harming local residen.
+Murray Cox and his partners aim to make Airbnb's data more transparent and accessible to the public. In addition to making visual dashboards of different cities, they also wrote many reports based on these data. For example, they criticized Airbnb’s New York data as misleading (Cox and Slee, 2016). 
+
+For consumers, they can understand market trends more easily, which help them make more informed decisions and choose accommodation that fits their needs and budget; For landlords, transparency of information will promote fair competition, and maintain the stability of short-term rental market prices; For academics, they can use these data to explore how Airbnb relates to many factors in urban development; For the government, they can understand the current situation of the short-term rental market and try to control the phenomenon that is not conducive to the stable development of the city by establishing more supervision regulation.
 
 ```{python}
 print(f"Data frame is {df.shape[0]:,} x {df.shape[1]:,}")
@@ -118,9 +117,9 @@ ax.set_xlim([0,500]);
 
 ## 3. How was the data collected?  
 
-Inside Airbnb uses web scraping scripts to extract publicly available information from Airbnb's website on a quarterly basis. These scripts go through the Airbnb site, access pages, and get data such as listing titles, descriptions, hosts, pricing, etc. The collected data is then verified, cleaned, and made available on the Inside Airbnb website for users to explore on the website, or download and analyze. 
+Inside Airbnb uses web scraping scripts to extract publicly available information from Airbnb's website on a quarterly basis. These scripts navigate the Airbnb site, accessing various pages to retrieve data such as listing titles, descriptions, hosts, pricing, and more. The collected data is then verified, cleaned, and made available on the Inside Airbnb website for users to explore online or download for analysis.
 
-Beyond providing a snapshot, InsideAirbnb also conducts deeper analyses with this raw data to derive more insightful data to users. For example, InsideAirbnb also uses a priopriety "San Francisco Model" to estimate how often an Airbnb listing is being rented out and also approximate a listing's income.
+In addition to providing a snapshot, Inside Airbnb conducts in-depth analyses using this raw data to derive more insightful information for users. For instance, the platform employs a proprietary "San Francisco Model" to estimate the frequency with which an Airbnb listing is rented out and to approximate a listing's income.
 
 ## 4. How does the method of collection impact the completeness and/or accuracy of its representation of the process it seeks to study, and what wider issues does this raise?
 
@@ -137,11 +136,23 @@ First, Airbnb is a profitable company, making their data public without interfer
 
 ## 6. With reference to the data (*i.e.* using numbers, figures, maps, and descriptive statistics), what does an analysis of Hosts and Listing types suggest about the nature of Airbnb lets in London? 
 
-::: {.duedate}
+research question: The airbnb listings types have the impact on crime types
+The airbnb listings are divided into three types: Shared room, Private room, Entire home/apt (explain why we do this classification)
+The crime is divided into two types: ?? (explain why we do this classification)
 
-( 15 points; Answer due {{< var assess.group-date >}} )
-
-:::
+1、two types of crime 
+    -each type of crime 
+    -the frequency (histogram)
+    -the distribution of each area () 
+2、three types of airbnb listings
+    -statistic 
+    -the frequency (histogram)
+    -the distribution
+3、relationship
+    -compare the different frequency of crime types of different airbnb listings
+    -
+    -scatter
+    -correlation matrix
 
 ## 7. Drawing on your previous answers, and supporting your response with evidence (e.g. figures, maps, and statistical analysis/models), how *could* this data set be used to inform the regulation of Short-Term Lets (STL) in London? 
 
