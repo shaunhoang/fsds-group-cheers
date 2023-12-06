@@ -208,4 +208,16 @@ po/*~
 # RStudio Connect folder
 rsconnect/
 
-data/
+
+.csv
+.gz
+.gpkg  
+data/Boroughs.gpkg
+data/Greenspace.gpkg
+data/london_listings_nov23.csv.gz
+data/londonshp.zip
+data/LSOA_Dec_2021_Boundaries_Generalised.geojson
+data/lsoa-data.csv
+data/lsoa.geojson
+data/metrocrime_1020_0923.csv
+data/Water.gpkg
