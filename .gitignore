@@ -208,11 +208,24 @@ po/*~
 # RStudio Connect folder
 rsconnect/
 
-.csv
-.xlsx
-.csv
-.gz
-.gpkg  
+*.csv
+*.xlsx
+*.csv
+*.gz
+*.gpkg  
+*.geojson
+*.zip
+*.shp
+*.dbf
+*.prj
+*.shx
+*.sbn
+*.sbx
+*.xml
+*.txt
+*.json
+*.xls
+
 data/Boroughs.gpkg
 data/Greenspace.gpkg
 data/london_listings_nov23.csv.gz
