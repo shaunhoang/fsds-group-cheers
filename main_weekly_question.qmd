@@ -136,23 +136,26 @@ First, Airbnb is a profitable company, making their data public without interfer
 
 ## 6. With reference to the data (*i.e.* using numbers, figures, maps, and descriptive statistics), what does an analysis of Hosts and Listing types suggest about the nature of Airbnb lets in London? 
 
-research question: The airbnb listings types have the impact on crime types
-The airbnb listings are divided into three types: Shared room, Private room, Entire home/apt (explain why we do this classification)
-The crime is divided into two types: ?? (explain why we do this classification)
+(explain why we do this research)
 
-1、two types of crime 
-    -each type of crime 
-    -the frequency (histogram)
-    -the distribution of each area () 
-2、three types of airbnb listings
-    -statistic 
-    -the frequency (histogram)
-    -the distribution
-3、relationship
-    -compare the different frequency of crime types of different airbnb listings
-    -
-    -scatter
-    -correlation matrix
+Research question: The airbnb listings types have the impact on crime types
+
+Data Source:
+
+The whole scale of these two data set:
+
+The airbnb listing will be divided into three types: Shared room, Private room, Entire home/apt (explain why we do this classification)
+The crime will be divided into ?? types: ?? (explain why we do this classification)
+
+The descriptive statistics of each variable:
+
+The area distribution of each variable (five histograms):
+
+The spatial visulization of each variable (five KDE heat maps):
+
+Scatter plots to show relationship between each X and each Y: (X-axis is room type and Y-axis is crime type)
+
+Correlation matrix:
 
 ## 7. Drawing on your previous answers, and supporting your response with evidence (e.g. figures, maps, and statistical analysis/models), how *could* this data set be used to inform the regulation of Short-Term Lets (STL) in London? 
 
