@@ -208,7 +208,8 @@ po/*~
 # RStudio Connect folder
 rsconnect/
 
-
+.csv
+.xlsx
 .csv
 .gz
 .gpkg  
