@@ -224,15 +224,16 @@ crime.head()
 # Histogram
 ```
 
-The descriptive statistics of each variable:
-
-The area distribution of each variable (histograms):
+The descriptive statistics of each variable (histograms):
 
 The spatial visulization of each variable (fheat maps):
 
 ```{python}
 # kernel density estimation plot of listings for each room type on a map
 # ['Private room' 'Entire home/apt' 'Shared room']
+
+# Create thresholds
+levels = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1]
 
 fig, (ax1,ax2,ax3) = plt.subplots(3,1, figsize=(21,15))
 
@@ -244,31 +245,34 @@ for ax in fig.get_axes():
     boros.plot(edgecolor='red', facecolor='None',ax=ax)
     green.plot(edgecolor=None, facecolor=(0,1,0,0.5), ax=ax)
     water.plot(edgecolor=None,facecolor='#a2cffe',ax=ax)
+    sns.kdeplot(ax=ax,
+                x=crime[crime['Tourism-relevance']=='Relevant'].geometry.x,
+                y=crime[crime['Tourism-relevance']=='Relevant'].geometry.y,
+                levels = levels, fill=True, cmap='Blue', alpha=0.9)
 
-# Create thresholds
-levels = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1]
 # Kernel Density Estimation
-kde = sns.kdeplot(
+kde_shared = sns.kdeplot(
     ax=ax1,
     x=listings[listings.room_type=='Shared room'].geometry.x,
     y=listings[listings.room_type=='Shared room'].geometry.y,
     levels = levels, fill=True, cmap='Reds', alpha=0.9
 )
-kde = sns.kdeplot(
+kde_prv = sns.kdeplot(
     ax=ax2,
     x=listings[listings.room_type=='Private room'].geometry.x,
     y=listings[listings.room_type=='Private room'].geometry.y,
     levels = levels, fill=True, cmap='Reds', alpha=0.9
 )
-kde = sns.kdeplot(
+kde_entire = sns.kdeplot(
     ax=ax3,
     x=listings[listings.room_type=='Entire home/apt'].geometry.x,
     y=listings[listings.room_type=='Entire home/apt'].geometry.y,
     levels = levels, fill=True, cmap='Reds', alpha=0.9
 )
-ax1.set_title('Shared room')
-ax2.set_title('Private room')
-ax3.set_title('Entire home/apt')
+
+ax1.set_title('Shared room vs. Crime Density')
+ax2.set_title('Private room vs. Crime Density')
+ax3.set_title('Entire home/apt vs. Crime Density')
 plt.show()
 ```
 
