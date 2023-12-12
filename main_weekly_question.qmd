@@ -91,7 +91,6 @@ def cache_data(src:str, dest:str) -> str:
 
     src : URL
     dest : location on local drive
-    
     """    
     url = urlparse(src) # We assume that this is some kind of valid URL 
     fn  = os.path.split(url.path)[-1] # Extract the filename
@@ -155,15 +154,6 @@ Murray Cox and his partners aim to make Airbnb's data more transparent and acces
 
 For consumers, they can understand market trends more easily, which help them make more informed decisions and choose accommodation that fits their needs and budget; For landlords, transparency of information will promote fair competition, and maintain the stability of short-term rental market prices; For academics, they can use these data to explore how Airbnb relates to many factors in urban development; For the government, they can understand the current situation of the short-term rental market and try to control the phenomenon that is not conducive to the stable development of the city by establishing more supervision regulation.
 
-```{python}
-print(f"Data frame is {df.shape[0]:,} x {df.shape[1]:,}")
-```
-
-```{python}
-ax = df.host_listings_count.plot.hist(bins=50);
-ax.set_xlim([0,500]);
-```
-
 ## 3. How was the data collected?
 
 Inside Airbnb uses web scraping scripts to extract publicly available information from Airbnb's website on a quarterly basis. These scripts navigate the Airbnb site, accessing various pages to retrieve data such as listing titles, descriptions, hosts, pricing, and more. The collected data is then verified, cleaned, and made available on the Inside Airbnb website for users to explore online or download for analysis.
@@ -172,12 +162,12 @@ In addition to providing a snapshot, Inside Airbnb conducts in-depth analyses us
 
 ## 4. How does the method of collection impact the completeness and/or accuracy of its representation of the process it seeks to study, and what wider issues does this raise?
 
-1.  Pricing and availability among others are extremely dynamic attributes set by hosts that cannot be captured accurately with webscraping, which only reflects a snapshot of the website at one specific moment in time.
+1.  Pricing and availability among others are extremely dynamic attributes set by hosts that cannot be captured accurately with web-scraping, which only reflects a snapshot of the website at one specific moment in time.
 2.  Susceptible to changes in the structure of the website.
-3.  Web scraping only accesses pubicly available listings.
+3.  Web scraping only accesses publicly available listings.
 4.  Too frequent web scraping may affect site performance which in turns affect the data scraped
 5.  Has to ethical and legal implications
-6.  Data capture can only capture real-time airbnb data, and long-term comparative analysis requires data collection in advance
+6.  Data capture can only capture real-time AirBnb data, and long-term comparative analysis requires data collection in advance
 
 ## 5. What ethical considerations does the use of this data raise?
 
@@ -185,7 +175,7 @@ First, Airbnb is a profitable company, making their data public without interfer
 
 Second, as the data is simply extracted and shown, users can only see the surface and cannot understand the context and logic of it. It may cause inaccuracies usage of data, which can be misused and misguide public opinion (D’Ignazio and Klein, 2020). For example, the rental activities of a particular group may be negatively analyzed, which will reinforce the stereotype of this group and then trigger discrimination and antagonism mood of society.
 
-Third, data settings are always influenced by power (D’Ignazio and Klein, 2020). Airbnb often leaves out reviews that aren’t friendly to properties and focuses on those that are profitable, such as setting its recommendation algorithm to favour partners. Therefore, users need to be fair when using such data.
+Third, data settings are always influenced by power (D’Ignazio and Klein, 2020). Airbnb often leaves out reviews that aren’t friendly to properties and focuses on those that are profitable, such as setting its recommendation algorithm to favor partners. Therefore, users need to be fair when using such data.
 
 ## 6. With reference to the data (*i.e.* using numbers, figures, maps, and descriptive statistics), what does an analysis of Hosts and Listing types suggest about the nature of Airbnb lets in London?
 
@@ -249,7 +239,7 @@ for ax in fig.get_axes():
     sns.kdeplot(ax=ax,
                 x=crime[crime['Tourism-relevance']=='Relevant'].geometry.x,
                 y=crime[crime['Tourism-relevance']=='Relevant'].geometry.y,
-                levels = levels, fill=True, cmap='Blue', alpha=0.9)
+                levels = levels, fill=True, cmap='Blues', alpha=0.9)
 
 # Kernel Density Estimation
 kde_shared = sns.kdeplot(
