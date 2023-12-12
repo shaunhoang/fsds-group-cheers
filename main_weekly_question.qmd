@@ -181,19 +181,19 @@ In addition to providing a snapshot, Inside Airbnb conducts in-depth analyses us
 
 ## 5. What ethical considerations does the use of this data raise?
 
-First, Airbnb is a profitable company, making their data public without interfering with normal operations makes it easier to regulate them. But as landlords and renters, they have the right to request that their personal information not be made public elsewhere. However, it is not possible to ask everyone’s consent when the data is crawled. Therefore, using this data may be needed to handle sensitive personal information. Second, as the data is simply extracted and shown, users can only see the surface and cannot understand the context and logic of it. It may cause inaccuracies usage of data, which can be misused and misguide public opinion (D’Ignazio and Klein, 2020). For example, the rental activities of a particular group may be negatively analyzed, which will reinforce the stereotype of this group and then trigger discrimination and antagonism mood of society. Third, data settings are always influenced by power (D’Ignazio and Klein, 2020). Airbnb often leaves out reviews that aren’t friendly to properties and focuses on those that are profitable, such as setting its recommendation algorithm to favour partners. Therefore, users need to be fair when using such data. Moreover, for the community, inside Airbnb, which aggregates Airbnb property data, gives an insight into the characteristics of neighbourhoods, such as the community’s entire pool of guests, which may be revealed. This could have implications for home privacy and home security.
+First, Airbnb is a profitable company, making their data public without interfering with normal operations makes it easier to regulate them. But as landlords and renters, they have the right to request that their personal information not be made public elsewhere. However, it is not possible to ask everyone’s consent when the data is crawled. Therefore, using this data may be needed to handle sensitive personal information. For example, this could have implications for home privacy and home security.
+
+Second, as the data is simply extracted and shown, users can only see the surface and cannot understand the context and logic of it. It may cause inaccuracies usage of data, which can be misused and misguide public opinion (D’Ignazio and Klein, 2020). For example, the rental activities of a particular group may be negatively analyzed, which will reinforce the stereotype of this group and then trigger discrimination and antagonism mood of society.
+
+Third, data settings are always influenced by power (D’Ignazio and Klein, 2020). Airbnb often leaves out reviews that aren’t friendly to properties and focuses on those that are profitable, such as setting its recommendation algorithm to favour partners. Therefore, users need to be fair when using such data.
 
 ## 6. With reference to the data (*i.e.* using numbers, figures, maps, and descriptive statistics), what does an analysis of Hosts and Listing types suggest about the nature of Airbnb lets in London?
 
-(explain why we do this research)
+Research question: The airbnb listings types have the impact on crime in the neighborhoods
 
-Research question: The airbnb listings types have the impact on crime types
+Data Source: Where we get data from (Metropolitan Police data, (data.police.uk), and other data from London Datastore
 
-Data Source:
-
-The whole scale of these two data set:
-
-The airbnb listing will be divided into three types: Shared room, Private room, Entire home/apt (explain why we do this classification). Omit Hotel room. Trim outliers (price)
+According to (paper), there is relationship blablab. Therefore, for our analysis we will focus on 3 types of airbnb properties. That is, oiit Hotel room. Moreover, we trim listing price outliers to control for potentially bogus listings.
 
 ```{python}
 # Omit rows with Hotel room
@@ -210,7 +210,7 @@ listings = listings[(listings.price >= q1 - 1.5*iqr) & (listings.price <= q3 + 1
 listings.price.plot.box()
 ```
 
-The crime will subset to a few crime types that are relevant to tourism (explain why we do this classification)
+The crime will subset to a few crime types that are relevant to tourism (explain why we do this classification). \['Burglary','Robbery','Theft from the person', 'Bicycle theft','Anti-social behaviour', 'Public order','Drugs'\]. Cite paper
 
 ```{python}
 # Clean crime data: outliers, and missing values, split into 2 types by severity
@@ -221,10 +221,11 @@ crime = crime[~crime['Crime type'].isin(['Other theft','Other crime'])]
 crime['Tourism-relevance'] = np.where(crime['Crime type'].isin(crime_sub), 'Relevant', 'Less relevant')
 crime.head()
 
-# Histogram
 ```
 
 The descriptive statistics of each variable (histograms):
+
+...
 
 The spatial visulization of each variable (fheat maps):
 
@@ -276,34 +277,9 @@ ax3.set_title('Entire home/apt vs. Crime Density')
 plt.show()
 ```
 
-```{python}
-# kernel density estimation plot of crime on a map
-fig, ax = plt.subplots(figsize=(32,32))
-
-ax.axes.xaxis.set_visible(False)
-ax.axes.yaxis.set_visible(False)
-ax.set_xlim([501000, 563000])
-ax.set_ylim([155000, 202000])
-boros.plot(edgecolor='red', facecolor='None',ax=ax)
-green.plot(edgecolor=None, facecolor=(0,1,0,0.5), ax=ax)
-water.plot(edgecolor=None,facecolor='#a2cffe',ax=ax)
-
-# Create thresholds
-levels = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1]
-# Kernel Density Estimation
-kde = sns.kdeplot(
-    ax=ax,
-    x=crime[crime['Tourism-relevance']=='Relevant'].geometry.x,
-    y=crime[crime['Tourism-relevance']=='Relevant'].geometry.y,
-    levels = levels, fill=True, cmap='Reds', alpha=0.9
-)
-ax.set_title('Crime relevant to tourism')
-plt.show()
-```
-
-Scatter plots to show relationship between each X and each Y: (X-axis is room type and Y-axis is crime type)
-
 Correlation matrix:
+
+In order to have a sense of the relationship between different airbnb listing type and crim
 
 ## 7. Drawing on your previous answers, and supporting your response with evidence (e.g. figures, maps, and statistical analysis/models), how *could* this data set be used to inform the regulation of Short-Term Lets (STL) in London?
 
