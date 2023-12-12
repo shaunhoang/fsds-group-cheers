@@ -1,7 +1,7 @@
 ---
 bibliography: bio.bib
 csl: harvard-cite-them-right.csl
-title: CHEERUP's FSDS Group Project
+title: CHEER-UP's FSDS Group Project
 execute:
   echo: false
 format:
@@ -50,16 +50,16 @@ jupyter:
 
 ## Declaration of Authorship {.unnumbered .unlisted}
 
-We, [insert your group's names], confirm that the work presented in this assessment is our own. Where information has been derived from other sources, we confirm that this has been indicated in the work. Where a Large Language Model such as ChatGPT has been used we confirm that we have made its contribution to the final submission clear.
+We, \[insert your group's names\], confirm that the work presented in this assessment is our own. Where information has been derived from other sources, we confirm that this has been indicated in the work. Where a Large Language Model such as ChatGPT has been used we confirm that we have made its contribution to the final submission clear.
 
 Date:
 
-Student Numbers: 
+Student Numbers:
 
 ## Brief Group Reflection
 
 | What Went Well | What Was Challenging |
-| -------------- | -------------------- |
+|----------------|----------------------|
 | A              | B                    |
 | C              | D                    |
 
@@ -73,36 +73,85 @@ Are there any areas on which you would appreciate more detailed feedback if we'r
 
 ```{python}
 import os
+from requests import get
+from urllib.parse import urlparse
+import numpy as np
 import pandas as pd
+import geopandas as gpd
+import matplotlib.pyplot as plt
+import seaborn as sns
 ```
 
 ```{python}
-# host = 'https://orca.casa.ucl.ac.uk'
-# path = '~jreades/data'
-# file = '2022-09-10-listings.csv.gz'
-# url  = f'{host}/{path}/{file}'
+# Function to download files from remote
+def cache_data(src:str, dest:str) -> str:
+    """
+    Create a folder to store file from URL.
+    If folder doesn't already exists, then create one, before writing the file.
 
-# if os.path.exists(os.pathdatafile):
-#   df = pd.read_csv(file, compression='gzip', low_memory=False)
-# else: 
-#   df = pd.read_csv(url, compression='gzip', low_memory=False)
-#   df.to_csv(file)
+    src : URL
+    dest : location on local drive
+    
+    """    
+    url = urlparse(src) # We assume that this is some kind of valid URL 
+    fn  = os.path.split(url.path)[-1] # Extract the filename
+    dfn = os.path.join(dest,fn) # Destination filename as path
+    
+    if not os.path.isfile(dfn):
+        
+        print(f"{dfn} not found, downloading!")
+        path = os.path.split(dest)
+        if len(path) >= 1 and path[0] != '':
+            os.makedirs(os.path.join(*path), exist_ok=True)     
+        with open(dfn, "wb") as file:
+            response = get(src)
+            file.write(response.content)
+        print("\tDone downloading...")
+    else:
+        print(f"Found {dfn} locally!")
+    return dfn
 ```
 
 ```{python}
-# Read file in the data folder. The file is extracted from insideairbnb.com on Nov 13, 2023
+# Define paths
+ddir  = os.path.join('data','geo') # destination directory
+spath = 'https://github.com/jreades/i2p/blob/master/data/src/' # source path
+spath_db = 'https://www.dropbox.com/scl/fi/' # source path for dropbox
+```
 
-df = pd.read_csv(os.path.join('data','listings.csv.gz'), compression='gzip', low_memory=False)
+```{python}
+# Read in airbnb, crime, and lsoa stats files. https://www.dropbox.com/home/casa/casa_fsds_cheers. 
+# These files have been cleaned, cropped, turned into gdf and hosted on dropbox to save time later on. See cleandata.ipynb in the Github repo for more details on how these files were created.
+# [PATIENCE] Takes about 7-8 minutes to download and read in the data
+
+# Crime data filtered for September 2023, within Greater London
+crime = gpd.read_file(cache_data(spath_db + 'ewc9skqcfr930whzcjadd/crime.gpkg?rlkey=xjve2mmmmt5h3allsa2zpabya&dl=1', ddir),driver='gpkg',low_memory=False)
+# Airbnb listing data scraped on September 2023, filtered within Greater London
+listings = gpd.read_file(cache_data(spath_db + 's1nisliy5tof1fpb7vx4w/listings.gpkg?rlkey=gxb97iasj68mfy2jgzbiw0tgp&dl=1', ddir),driver='gpkg' ,low_memory=False)
+# LSOA (London) data concatenated from multiple datasets from London Datastore,
+lsoa_stat = pd.read_csv(cache_data(spath_db + '8zc0g09rlf1yhj6j7yn6n/lsoa_full.csv?rlkey=yopr4hv017rr3iv4e2zus0ifz&dl=1', ddir), low_memory=False)
+```
+
+```{python}
+# Read in shapefiles (2 mins)
+water = gpd.read_file(cache_data(spath+'Water.gpkg?raw=true', ddir))
+green = gpd.read_file(cache_data(spath+'Greenspace.gpkg?raw=true', ddir))
+boros = gpd.read_file(cache_data(spath+'Boroughs.gpkg?raw=true', ddir))
+lsoa = gpd.read_file(cache_data(spath_db+'u367zlorie8vuluugy2fr/lsoa_london.gpkg?rlkey=rc7rdnlfdmzfgy5q7ujz9pnwj&dl=1', ddir))
+print('Done.')
+
+#Check CRS for all geo dataframes
+print(water.crs, green.crs, boros.crs, lsoa.crs, crime.crs, listings.crs)
+# All dataframes are in EPSG:27700
 ```
 
 ## 1. Who collected the data?
 
-Inside Airbnb was founded by Murray Cox who conceived the project, and keeps updating and analyzing Airbnb data (*About Inside Airbnb*, no date). 
- 
+Inside Airbnb was founded by Murray Cox who conceived the project, and keeps updating and analyzing Airbnb data (*About Inside Airbnb*, no date).
 
 ## 2. Why did they collect it?
 
-Murray Cox and his partners aim to make Airbnb's data more transparent and accessible to the public. In addition to making visual dashboards of different cities, they also wrote many reports based on these data. For example, they criticized Airbnb’s New York data as misleading (Cox and Slee, 2016). 
+Murray Cox and his partners aim to make Airbnb's data more transparent and accessible to the public. In addition to making visual dashboards of different cities, they also wrote many reports based on these data. For example, they criticized Airbnb’s New York data as misleading (Cox and Slee, 2016).
 
 For consumers, they can understand market trends more easily, which help them make more informed decisions and choose accommodation that fits their needs and budget; For landlords, transparency of information will promote fair competition, and maintain the stability of short-term rental market prices; For academics, they can use these data to explore how Airbnb relates to many factors in urban development; For the government, they can understand the current situation of the short-term rental market and try to control the phenomenon that is not conducive to the stable development of the city by establishing more supervision regulation.
 
@@ -115,7 +164,7 @@ ax = df.host_listings_count.plot.hist(bins=50);
 ax.set_xlim([0,500]);
 ```
 
-## 3. How was the data collected?  
+## 3. How was the data collected?
 
 Inside Airbnb uses web scraping scripts to extract publicly available information from Airbnb's website on a quarterly basis. These scripts navigate the Airbnb site, accessing various pages to retrieve data such as listing titles, descriptions, hosts, pricing, and more. The collected data is then verified, cleaned, and made available on the Inside Airbnb website for users to explore online or download for analysis.
 
@@ -123,18 +172,18 @@ In addition to providing a snapshot, Inside Airbnb conducts in-depth analyses us
 
 ## 4. How does the method of collection impact the completeness and/or accuracy of its representation of the process it seeks to study, and what wider issues does this raise?
 
-1. Pricing and availability among others are extremely dynamic attributes set by hosts that cannot be captured accurately with webscraping, which only reflects a snapshot of the website at one specific moment in time.
-2. Susceptible to changes in the structure of the website.
-3. Web scraping only accesses pubicly available listings.
-4. Too frequent web scraping may affect site performance which in turns affect the data scraped
-5. Has to ethical and legal implications
-6. Data capture can only capture real-time airbnb data, and long-term comparative analysis requires data collection in advance
+1.  Pricing and availability among others are extremely dynamic attributes set by hosts that cannot be captured accurately with webscraping, which only reflects a snapshot of the website at one specific moment in time.
+2.  Susceptible to changes in the structure of the website.
+3.  Web scraping only accesses pubicly available listings.
+4.  Too frequent web scraping may affect site performance which in turns affect the data scraped
+5.  Has to ethical and legal implications
+6.  Data capture can only capture real-time airbnb data, and long-term comparative analysis requires data collection in advance
 
-## 5. What ethical considerations does the use of this data raise? 
+## 5. What ethical considerations does the use of this data raise?
 
 First, Airbnb is a profitable company, making their data public without interfering with normal operations makes it easier to regulate them. But as landlords and renters, they have the right to request that their personal information not be made public elsewhere. However, it is not possible to ask everyone’s consent when the data is crawled. Therefore, using this data may be needed to handle sensitive personal information. Second, as the data is simply extracted and shown, users can only see the surface and cannot understand the context and logic of it. It may cause inaccuracies usage of data, which can be misused and misguide public opinion (D’Ignazio and Klein, 2020). For example, the rental activities of a particular group may be negatively analyzed, which will reinforce the stereotype of this group and then trigger discrimination and antagonism mood of society. Third, data settings are always influenced by power (D’Ignazio and Klein, 2020). Airbnb often leaves out reviews that aren’t friendly to properties and focuses on those that are profitable, such as setting its recommendation algorithm to favour partners. Therefore, users need to be fair when using such data. Moreover, for the community, inside Airbnb, which aggregates Airbnb property data, gives an insight into the characteristics of neighbourhoods, such as the community’s entire pool of guests, which may be revealed. This could have implications for home privacy and home security.
 
-## 6. With reference to the data (*i.e.* using numbers, figures, maps, and descriptive statistics), what does an analysis of Hosts and Listing types suggest about the nature of Airbnb lets in London? 
+## 6. With reference to the data (*i.e.* using numbers, figures, maps, and descriptive statistics), what does an analysis of Hosts and Listing types suggest about the nature of Airbnb lets in London?
 
 (explain why we do this research)
 
@@ -144,31 +193,132 @@ Data Source:
 
 The whole scale of these two data set:
 
-The airbnb listing will be divided into three types: Shared room, Private room, Entire home/apt (explain why we do this classification)
-The crime will be divided into ?? types: ?? (explain why we do this classification)
+The airbnb listing will be divided into three types: Shared room, Private room, Entire home/apt (explain why we do this classification). Omit Hotel room. Trim outliers (price)
+
+```{python}
+# Omit rows with Hotel room
+listings = listings[~listings['room_type'].isin(['Hotel room'])]
+
+# Transform price to float
+if listings.price.dtype == 'O':
+    listings.price = listings.price.str.replace('$','').str.replace(',','').astype(float).round(2)
+# Trim outliers in terms of price based on interquartile range, because they are most likely they are not real listings
+q1 = listings.price.quantile(0.25)
+q3 = listings.price.quantile(0.75)
+iqr = q3 - q1
+listings = listings[(listings.price >= q1 - 1.5*iqr) & (listings.price <= q3 + 1.5*iqr)]
+listings.price.plot.box()
+```
+
+The crime will subset to a few crime types that are relevant to tourism (explain why we do this classification)
+
+```{python}
+# Clean crime data: outliers, and missing values, split into 2 types by severity
+crime_sub = ['Burglary','Robbery','Theft from the person', 'Bicycle theft','Anti-social behaviour', 'Public order','Drugs']
+# Omit rows with Other Crime and Other Theft
+crime = crime[~crime['Crime type'].isin(['Other theft','Other crime'])]
+# Create a new column for crime type
+crime['Tourism-relevance'] = np.where(crime['Crime type'].isin(crime_sub), 'Relevant', 'Less relevant')
+crime.head()
+
+# Histogram
+```
 
 The descriptive statistics of each variable:
 
-The area distribution of each variable (five histograms):
+The area distribution of each variable (histograms):
 
-The spatial visulization of each variable (five KDE heat maps):
+The spatial visulization of each variable (fheat maps):
+
+```{python}
+# kernel density estimation plot of listings for each room type on a map
+# ['Private room' 'Entire home/apt' 'Shared room']
+
+fig, (ax1,ax2,ax3) = plt.subplots(3,1, figsize=(21,15))
+
+for ax in fig.get_axes():
+    ax.axes.xaxis.set_visible(False)
+    ax.axes.yaxis.set_visible(False)
+    ax.set_xlim([501000, 563000])
+    ax.set_ylim([155000, 202000])
+    boros.plot(edgecolor='red', facecolor='None',ax=ax)
+    green.plot(edgecolor=None, facecolor=(0,1,0,0.5), ax=ax)
+    water.plot(edgecolor=None,facecolor='#a2cffe',ax=ax)
+
+# Create thresholds
+levels = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1]
+# Kernel Density Estimation
+kde = sns.kdeplot(
+    ax=ax1,
+    x=listings[listings.room_type=='Shared room'].geometry.x,
+    y=listings[listings.room_type=='Shared room'].geometry.y,
+    levels = levels, fill=True, cmap='Reds', alpha=0.9
+)
+kde = sns.kdeplot(
+    ax=ax2,
+    x=listings[listings.room_type=='Private room'].geometry.x,
+    y=listings[listings.room_type=='Private room'].geometry.y,
+    levels = levels, fill=True, cmap='Reds', alpha=0.9
+)
+kde = sns.kdeplot(
+    ax=ax3,
+    x=listings[listings.room_type=='Entire home/apt'].geometry.x,
+    y=listings[listings.room_type=='Entire home/apt'].geometry.y,
+    levels = levels, fill=True, cmap='Reds', alpha=0.9
+)
+ax1.set_title('Shared room')
+ax2.set_title('Private room')
+ax3.set_title('Entire home/apt')
+plt.show()
+```
+
+```{python}
+# kernel density estimation plot of crime on a map
+fig, ax = plt.subplots(figsize=(32,32))
+
+ax.axes.xaxis.set_visible(False)
+ax.axes.yaxis.set_visible(False)
+ax.set_xlim([501000, 563000])
+ax.set_ylim([155000, 202000])
+boros.plot(edgecolor='red', facecolor='None',ax=ax)
+green.plot(edgecolor=None, facecolor=(0,1,0,0.5), ax=ax)
+water.plot(edgecolor=None,facecolor='#a2cffe',ax=ax)
+
+# Create thresholds
+levels = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1]
+# Kernel Density Estimation
+kde = sns.kdeplot(
+    ax=ax,
+    x=crime[crime['Tourism-relevance']=='Relevant'].geometry.x,
+    y=crime[crime['Tourism-relevance']=='Relevant'].geometry.y,
+    levels = levels, fill=True, cmap='Reds', alpha=0.9
+)
+ax.set_title('Crime relevant to tourism')
+plt.show()
+```
 
 Scatter plots to show relationship between each X and each Y: (X-axis is room type and Y-axis is crime type)
 
 Correlation matrix:
 
-## 7. Drawing on your previous answers, and supporting your response with evidence (e.g. figures, maps, and statistical analysis/models), how *could* this data set be used to inform the regulation of Short-Term Lets (STL) in London? 
+## 7. Drawing on your previous answers, and supporting your response with evidence (e.g. figures, maps, and statistical analysis/models), how *could* this data set be used to inform the regulation of Short-Term Lets (STL) in London?
 
-::: {.duedate}
+Policy recommendation: TBD. Some ideas (NEED LITERATURE TO BACKUP)
 
-( 45 points; Answer due {{< var assess.group-date >}} )
+If there are relationships
 
-:::
+1.  Reactive: Increase police presence in areas with high Airbnb density
+2.  Proactive: Limit Airbnb density in areas with high crime rates of a certain type
+3.  Collaborative: Airbnb to share data with local police departments to help them identify areas with high Airbnb density
+4.  Punitive: Airbnb to pay a fine for every crime incident that occurs in areas with high Airbnb density
+5.  Preventive: Airbnb to pay for additional security cameras in areas with high Airbnb density
+
+If not: Other cities this but London doesn't see the same issue. Should look at improving crime by improving other aspects...
 
 ## Sustainable Authorship Tools
 
 Your QMD file should automatically download your BibTeX file. We will then re-run the QMD file to generate the output successfully.
 
-Written in Markdown and generated from [Quarto](https://quarto.org/). Fonts used: [Spectral](https://fonts.google.com/specimen/Spectral) (mainfont), [Roboto](https://fonts.google.com/specimen/Roboto) (<span style="font-family:Sans-Serif;">sansfont</span>) and [JetBrains Mono](https://fonts.google.com/specimen/JetBrains%20Mono) (`monofont`). 
+Written in Markdown and generated from [Quarto](https://quarto.org/). Fonts used: [Spectral](https://fonts.google.com/specimen/Spectral) (mainfont), [Roboto](https://fonts.google.com/specimen/Roboto) ([sansfont]{style="font-family:Sans-Serif;"}) and [JetBrains Mono](https://fonts.google.com/specimen/JetBrains%20Mono) (`monofont`).
 
 ## References
