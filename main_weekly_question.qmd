@@ -277,13 +277,14 @@ plt.show()
 
 In order to have a sense of the relationship between different airbnb listing type and crime, we plotted Correlation
 
-We decided to use LSOA level because... 
+We decided to use LSOA level because... (Acknowledge possible Modifiable Area Unit Problem, i.e. would the insights be different if a different administrative unit is used instead)
 
 Here is the spatial distribution 
 [Map]
 Here is correlation matrix
 [Matrix]
 It shows stronger relationship between Entire home vs. Cirme density, followed by private room and then shared room. This is because bla bla.
+
 ##### Spatial Autocorrelation + zooming into areas with anomalies
 
 \[Codes and graphs\] \[I'm still cleaning this part up, please leave blank\]
