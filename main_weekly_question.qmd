@@ -222,12 +222,11 @@ crime.head()
 
 ###### The descriptive statistics of each variable
 
-[Codes and graphs\] \[Im still workíng on this, pls leave blank\]
 
 ###### The spatial visualization of each variable (fheat maps):
 
 ```{python}
-# kernel density estimation plot of listings for each room type on a map
+# kernel density estimation plot of listings for each room type on a map overlaid over crime density
 # ['Private room' 'Entire home/apt' 'Shared room']
 
 # Create thresholds
@@ -276,9 +275,16 @@ plt.show()
 
 ##### Correlation matrix: 
 
-In order to have a sense of the relationship between different airbnb listing type and crime, we plotted CorrelationIt shows stronger relationship between Entire home vs. Cirme density, followed by private room and then shared room. This is because bla bla.
+In order to have a sense of the relationship between different airbnb listing type and crime, we plotted Correlation
 
-###### Spatial Autocorrelation + zooming into areas with anomalies
+We decided to use LSOA level because... 
+
+Here is the spatial distribution 
+[Map]
+Here is correlation matrix
+[Matrix]
+It shows stronger relationship between Entire home vs. Cirme density, followed by private room and then shared room. This is because bla bla.
+##### Spatial Autocorrelation + zooming into areas with anomalies
 
 \[Codes and graphs\] \[I'm still cleaning this part up, please leave blank\]
 
