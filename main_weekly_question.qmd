@@ -179,11 +179,13 @@ Third, data settings are always influenced by power (D’Ignazio and Klein, 2020
 
 ## 6. With reference to the data (*i.e.* using numbers, figures, maps, and descriptive statistics), what does an analysis of Hosts and Listing types suggest about the nature of Airbnb lets in London?
 
-Research question: The airbnb listings types have the impact on crime in the neighborhoods
+Research question: The airbnb listings types have the impact on crime in the neighborhoods.
 
-Data Source: Where we get data from (Metropolitan Police data, (data.police.uk), and other data from London Datastore
+Why: We see this phenomenon in other cities explored by paper such as ... ... and find it necessary to re-establish whether it applies to London. This is due to the nature of crime being complex and not universal across localities. blah blah. If found to be a contributing factor to crime, controlling for other factors, this would mean regulation of Airbnb and the heightening of police enforcement in areas with high airbnb concentration. bla bla
 
-According to (paper), there is relationship blablab. Therefore, for our analysis we will focus on 3 types of airbnb properties. That is, oiit Hotel room. Moreover, we trim listing price outliers to control for potentially bogus listings.
+Data Source: Where we get data from (Metropolitan Police data, (data.police.uk), and other data from London Datastore, and Office for National Statistics.
+
+According to (paper A), there is relationship bla blab depending on the type of listing. Therefore, for our analysis we will focus on 3 types of airbnb properties. That is, oiit Hotel room. Moreover, we trim listing price outliers to control for potentially bogus listings.
 
 ```{python}
 # Omit rows with Hotel room
@@ -200,7 +202,7 @@ listings = listings[(listings.price >= q1 - 1.5*iqr) & (listings.price <= q3 + 1
 listings.price.plot.box()
 ```
 
-The crime will subset to a few crime types that are relevant to tourism (explain why we do this classification). \['Burglary','Robbery','Theft from the person', 'Bicycle theft','Anti-social behaviour', 'Public order','Drugs'\]. Cite paper
+The crime will subset to a few crime types that are relevant to tourism (explain why we do this classification). \['Burglary','Robbery','Theft from the person', 'Bicycle theft','Anti-social behaviour', 'Public order','Drugs'\]. Cite paper + cite reason why we're
 
 ```{python}
 # Clean crime data: outliers, and missing values, split into 2 types by severity
@@ -213,9 +215,7 @@ crime.head()
 
 ```
 
-The descriptive statistics of each variable (histograms):
-
-...
+The descriptive statistics of each variable (histograms): \[Codes and graphs\] \[Im still workíng on this, pls leave blank\]
 
 The spatial visulization of each variable (fheat maps):
 
@@ -267,13 +267,38 @@ ax3.set_title('Entire home/apt vs. Crime Density')
 plt.show()
 ```
 
-Correlation matrix:
+Correlation matrix: In order to have a sense of the relationship between different airbnb listing type and crime, we plotted CorrelationIt shows stronger relationship between Entire home vs. Cirme density, followed by private room and then shared room. This is because bla bla.
 
-In order to have a sense of the relationship between different airbnb listing type and crim
+Spatial Autocorrelation: \[Codes and graphs\] \[I'm still cleaning this part up, please leave blank\]
+
+Connection to #7: Correaltion doesn't mean causation bla bla, therefore we would like to run a regression. We will pay extra attention to Entire-home etc. because of the high correlation seen above.
 
 ## 7. Drawing on your previous answers, and supporting your response with evidence (e.g. figures, maps, and statistical analysis/models), how *could* this data set be used to inform the regulation of Short-Term Lets (STL) in London?
 
-Policy recommendation: TBD. Some ideas (NEED LITERATURE TO BACKUP)
+\[Regression explanation of all the dependent and independent variables\]
+
+Chosen columns: X
+
+-   Population density: Usual resident (11) / Area (need to get)
+-   Bad+Very Bad Health (120+121) / Pop (11)
+-   deprived 2+ dimension (144+145+146) / Pop (11)
+-   Unemployed (72) / Pop (11)
+-   Young people (17+18+19) / Pop (11)
+-   3x Airbnb listings (3 types) / Household number (3)
+
+Y
+
+-   Crime-relevant / Pop (11)
+
+\[Regression codes\]
+
+\[Refinement\]
+
+\[Results\]
+
+\[Discussion\]
+
+\[Policy recommendation\] TBD. Some ideas (NEED LITERATURE TO BACKUP)
 
 If there are relationships
 
