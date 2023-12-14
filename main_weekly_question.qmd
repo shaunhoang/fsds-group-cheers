@@ -183,7 +183,9 @@ Third, data settings are always influenced by power (D’Ignazio and Klein, 2020
 The airbnb listings types have the impact on crime in the neighborhoods.
 
 ###### Why
-We see this phenomenon in other cities explored by paper such as ... ... and find it necessary to re-establish whether it applies to London. This is due to the nature of crime being complex and not universal across localities. blah blah. If found to be a contributing factor to crime, controlling for other factors, this would mean regulation of Airbnb and the heightening of police enforcement in areas with high airbnb concentration. bla bla
+Airbnb provides indispensable accommodation for the development of tourism. As a short-term rental platform, the mobility of tenants is one of its major characteristics. Mobility has been shown to be a factor in crime (Mburu and Helbich, 2016), so recently there has been increasing concern about whether Airbnb, which brings high mobility to the local community, could be linked to an increase or decrease in crime. For example, Xu, Pennington-Gray, and Kim (2019) studied the relationship between Airbnb density and crime in Florida and found that certain types of listings do have a significant impact on crime. Therefore, we try to explore whether Airbnb in London could also have an impact on crime. However, as the causes of crime are complex, we use deprivation index, health status, and unemployment as control variables. 
+
+(We see this phenomenon in other cities explored by paper such as ... ... and find it necessary to re-establish whether it applies to London. This is due to the nature of crime being complex and not universal across localities. blah blah. If found to be a contributing factor to crime, controlling for other factors, this would mean regulation of Airbnb and the heightening of police enforcement in areas with high airbnb concentration. bla bla)
 
 ###### Data Source
 Where we get data from (Metropolitan Police data, (data.police.uk), and other data from London Datastore, and Office for National Statistics.
