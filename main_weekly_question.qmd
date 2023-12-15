@@ -50,7 +50,7 @@ jupyter:
 
 ## Declaration of Authorship {.unnumbered .unlisted}
 
-We, \[insert your group's names\], confirm that the work presented in this assessment is our own. Where information has been derived from other sources, we confirm that this has been indicated in the work. Where a Large Language Model such as ChatGPT has been used we confirm that we have made its contribution to the final submission clear.
+We, CHEER UP Group, confirm that the work presented in this assessment is our own. Where information has been derived from other sources, we confirm that this has been indicated in the work. Where a Large Language Model such as ChatGPT has been used we confirm that we have made its contribution to the final submission clear.
 
 Date:
 
@@ -60,7 +60,7 @@ Student Numbers:
 
 | What Went Well | What Was Challenging |
 |----------------|----------------------|
-| A              | B                    |
+| A                  | B                    |
 | C              | D                    |
 
 ## Priorities for Feedback
@@ -80,6 +80,8 @@ import pandas as pd
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
 ```
 
 ```{python}
@@ -96,15 +98,14 @@ def cache_data(src:str, dest:str) -> str:
     fn  = os.path.split(url.path)[-1] # Extract the filename
     dfn = os.path.join(dest,fn) #Destination filename as path
     
-    if not os.path.isfile(dfn):
-        
+    if not os.path.isfile(dfn):        
         print(f"{dfn} not found, downloading!")
         path = os.path.split(dest)
         if len(path) >= 1 and path[0] != '':
-            os.makedirs(os.path.join(*path), exist_ok=True)     
+            os.makedirs(os.path.join(*path), exist_ok=True)            
         with open(dfn, "wb") as file:
             response = get(src)
-            file.write(response.content)
+            file.write(response.content)            
         print("\tDone downloading...")
     else:
         print(f"Found {dfn} locally!")
@@ -116,19 +117,26 @@ def cache_data(src:str, dest:str) -> str:
 ddir  = os.path.join('data','geo') # destination directory
 spath = 'https://github.com/jreades/i2p/blob/master/data/src/' # source path
 spath_db = 'https://www.dropbox.com/scl/fi/' # source path for dropbox
+host = 'http://orca.casa.ucl.ac.uk'
+path = '~jreades/data'
 ```
 
 ```{python}
 # Read in airbnb, crime, and lsoa stats files. https://www.dropbox.com/home/casa/casa_fsds_cheers. 
-# These files have been cleaned, cropped, turned into gdf and hosted on dropbox to save time later on. See cleandata.ipynb in the Github repo for more details on how these files were created.
-# [PATIENCE] Takes about 7-8 minutes to download and read in the data
+# Some files have been cleaned, cropped, turned into gdf and hosted on dropbox to save time later on. See cleandata.ipynb in the Github repo for more details on how these files were created.
+# # [PATIENCE] Takes about 4 minutes to download and read in the data
 
 # Crime data filtered for September 2023, within Greater London
 crime = gpd.read_file(cache_data(spath_db + 'ewc9skqcfr930whzcjadd/crime.gpkg?rlkey=xjve2mmmmt5h3allsa2zpabya&dl=1', ddir),driver='gpkg',low_memory=False)
+
 # Airbnb listing data scraped on September 2023, filtered within Greater London
-listings = gpd.read_file(cache_data(spath_db + 's1nisliy5tof1fpb7vx4w/listings.gpkg?rlkey=gxb97iasj68mfy2jgzbiw0tgp&dl=1', ddir),driver='gpkg' ,low_memory=False)
+listings = gpd.read_parquet( cache_data(f'{host}/{path}/2023-09-06-listings.geoparquet', ddir))
+listings = listings.to_crs(epsg=27700)
+
 # LSOA (London) data concatenated from multiple datasets from London Datastore,
 lsoa_stat = pd.read_csv(cache_data(spath_db + '8zc0g09rlf1yhj6j7yn6n/lsoa_full.csv?rlkey=yopr4hv017rr3iv4e2zus0ifz&dl=1', ddir), low_memory=False)
+
+print('Done.')
 ```
 
 ```{python}
@@ -179,31 +187,33 @@ Third, data settings are always influenced by power (D’Ignazio and Klein, 2020
 
 ## 6. With reference to the data (*i.e.* using numbers, figures, maps, and descriptive statistics), what does an analysis of Hosts and Listing types suggest about the nature of Airbnb lets in London?
 
-Airbnb provides indispensable accommodation for the development of tourism. As a short-term rental platform, the mobility of tenants is one of its major characteristics. Mobility is a factor in crime (Mburu and Helbich, 2016), so recently there has been increasing concern about whether Airbnb, which brings high mobility to the local community, could be linked to an increase or decrease in crime. For example, Xu, Pennington-Gray and Kim (2019) studied the relationship between Airbnb density and crime in Florida and found that certain types of listings do have a significant impact on crime. Therefore, we try to explore whether Airbnb in London could also have an impact on crime. Our research question is: Whether the type of Airbnb listing have an impact on crime in the neighbourhood? However, as the causes of crime are complex, we use the deprivation index, health status, and unemployment as control variables. 
+Airbnb provides indispensable accommodation for the development of tourism. As a short-term rental platform, the mobility of tenants is one of its major characteristics. Mobility is a factor in crime (Mburu and Helbich, 2016), so recently there has been increasing concern about whether Airbnb, which brings high mobility to the local community, could be linked to an increase or decrease in crime. For example, Xu, Pennington-Gray and Kim (2019) studied the relationship between Airbnb density and crime in Florida and found that certain types of listings do have a significant impact on crime. Therefore, we try to explore whether Airbnb in London could also have an impact on crime. Our research question is: Whether the type of Airbnb listing have an impact on crime in the neighbourhood? However, as the causes of crime are complex, we use the deprivation index, health status, and unemployment as control variables.
 
-The Airbnb dataset is from the September 2023 updated version provided by Inside Airbnb. The crime dataset is from data.police.uk and has the same time dimension as Airbnb’s. The spatial partitioning dimension in this study is LSOA and is from the Office of National Statistics website. 
+The Airbnb dataset is from the September 2023 updated version provided by Inside Airbnb. The crime dataset is from data.police.uk and has the same time dimension as Airbnb’s. The spatial partitioning dimension in this study is LSOA and is from the Office of National Statistics website.
 
-As Xu, Pennington-Gray, and Kim (2019) mentioned different types of listings have different impacts, we refer to their classification standards to divide Airbnb housing into private rooms, shared rooms and entire homes. As for crime data, we want to make recommendations more specific to different types and levels of crime, so we classify crime into the following types (Xu, Pennington-ray, and Kim, 2019; Flatley, 2016):
-- Public order: Public order, Drugs, Possession of weapons, Anti-social behaviour.
-- Violent (involve force): Robbery, Violence and sexual offences.
-- Property (without force): Bicycle theft, Burglary, Criminal damage and arson, Shoplifting, Theft from the person, Vehicle crime.
-
+As Xu, Pennington-Gray, and Kim (2019) mentioned different types of listings have different impacts, we refer to their classification standards to divide Airbnb housing into private rooms, shared rooms and entire homes. As for crime data, we want to make recommendations more specific to different types and levels of crime, so we classify crime into the following types (Xu, Pennington-ray, and Kim, 2019; Flatley, 2016): - Public order: Public order, Drugs, Possession of weapons, Anti-social behaviour. - Violent (involve force): Robbery, Violence and sexual offences. - Property (without force): Bicycle theft, Burglary, Criminal damage and arson, Shoplifting, Theft from the person, Vehicle crime.
 
 ###### Data Source
+
 Where we get data from (Metropolitan Police data, (data.police.uk), and other data from London Datastore, and Office for National Statistics.
 
 ###### Defining the data blabla
+
 In order to examine the nature of airbnb and crime relationship, we want to first establish the parameters to focus on a subset of the datasets:
 
-FIRST, According to (paper A), there is relationship bla blab depending on the type of listing. Therefore, for our analysis we will focus on 3 types of airbnb properties. That is, oiit Hotel room. Moreover, we trim listing price outliers to control for potentially bogus listings.
+FIRST, According to (paper A), there is relationship bla blab depending on the type of listing. Therefore, for our analysis we will focus on 3 types of airbnb properties. That is, omit Hotel room. Moreover, we trim listing price outliers to control for potentially bogus listings.
 
 ```{python}
+# Clean listings data: outliers, and missing values, split into 3 types by property type
 # Omit rows with Hotel room
 listings = listings[~listings['room_type'].isin(['Hotel room'])]
 
 # Transform price to float
 if listings.price.dtype == 'O':
     listings.price = listings.price.str.replace('$','').str.replace(',','').astype(float).round(2)
+```
+
+```{python}
 # Trim outliers in terms of price based on interquartile range, because they are most likely they are not real listings
 q1 = listings.price.quantile(0.25)
 q3 = listings.price.quantile(0.75)
@@ -212,88 +222,181 @@ listings = listings[(listings.price >= q1 - 1.5*iqr) & (listings.price <= q3 + 1
 listings.price.plot.box()
 ```
 
+```{python}
+listings.plot(column='room_type', cmap='plasma', markersize=.5, alpha=0.15, figsize=(10,7))
+```
+
 SECOND, the crime will subset to a few crime types that are relevant to tourism (explain why we do this classification). \['Burglary','Robbery','Theft from the person', 'Bicycle theft','Anti-social behaviour', 'Public order','Drugs'\]. Cite paper + cite reason why we're
 
 ```{python}
 # Clean crime data: outliers, and missing values, split into 2 types by severity
-crime_sub = ['Burglary','Robbery','Theft from the person', 'Bicycle theft','Anti-social behaviour', 'Public order','Drugs']
+crime_property = ['Burglary', 'Criminal damage and arson',  'Theft from the person', 'Vehicle crime', 'Shoplifting', 'Bicycle theft']
+crime_violent = ['Robbery', 'Violence and sexual offences']  
+crime_publicorder = ['Anti-social behaviour', 'Public order','Drugs','Possession of weapons']
+# Need rationalization when writing the report
+
 # Omit rows with Other Crime and Other Theft
 crime = crime[~crime['Crime type'].isin(['Other theft','Other crime'])]
 # Create a new column for crime type
-crime['Tourism-relevance'] = np.where(crime['Crime type'].isin(crime_sub), 'Relevant', 'Less relevant')
-crime.head()
+crime['Category'] = np.where(crime['Crime type'].isin(crime_property), 'Property crime',
+                             np.where(crime['Crime type'].isin(crime_violent), 'Violent crime','Public Order crime'))
 ```
 
-###### The descriptive statistics of each variable
+```{python}
+crime.plot(column='Category', cmap='plasma', markersize=.5, alpha=0.15, figsize=(10,7))
+```
 
-
-###### The spatial visualization of each variable (fheat maps):
+##### The spatial visualization of each variable (fheat maps):
 
 ```{python}
-# kernel density estimation plot of listings for each room type on a map overlaid over crime density
-# ['Private room' 'Entire home/apt' 'Shared room']
+# KDE plot of listing types vs Crime categories
+# PATIENCE: It takes 3-4 minutes to run
 
-# Create thresholds
-levels = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1]
+fig, axes = plt.subplots(3,3, figsize=(32,24))
 
-fig, (ax1,ax2,ax3) = plt.subplots(3,1, figsize=(21,15))
-
+# Base
 for ax in fig.get_axes():
     ax.axes.xaxis.set_visible(False)
     ax.axes.yaxis.set_visible(False)
     ax.set_xlim([501000, 563000])
     ax.set_ylim([155000, 202000])
     boros.plot(edgecolor='red', facecolor='None',ax=ax)
-    green.plot(edgecolor=None, facecolor=(0,1,0,0.5), ax=ax)
-    water.plot(edgecolor=None,facecolor='#a2cffe',ax=ax)
-    sns.kdeplot(ax=ax,
-                x=crime[crime['Tourism-relevance']=='Relevant'].geometry.x,
-                y=crime[crime['Tourism-relevance']=='Relevant'].geometry.y,
-                levels = levels, fill=True, cmap='Blues', alpha=0.9)
 
-# Kernel Density Estimation
-kde_shared = sns.kdeplot(
-    ax=ax1,
-    x=listings[listings.room_type=='Shared room'].geometry.x,
-    y=listings[listings.room_type=='Shared room'].geometry.y,
-    levels = levels, fill=True, cmap='Reds', alpha=0.9
-)
-kde_prv = sns.kdeplot(
-    ax=ax2,
-    x=listings[listings.room_type=='Private room'].geometry.x,
-    y=listings[listings.room_type=='Private room'].geometry.y,
-    levels = levels, fill=True, cmap='Reds', alpha=0.9
-)
-kde_entire = sns.kdeplot(
-    ax=ax3,
-    x=listings[listings.room_type=='Entire home/apt'].geometry.x,
-    y=listings[listings.room_type=='Entire home/apt'].geometry.y,
-    levels = levels, fill=True, cmap='Reds', alpha=0.9
-)
+# KDE maps
+prop_cat = ['Shared room','Private room','Entire home/apt']
+crime_cat = ['Public Order crime','Property crime','Violent crime']
+# Create thresholds
+levels = [0.2,0.4,0.6,0.8,1]
 
-ax1.set_title('Shared room vs. Crime Density')
-ax2.set_title('Private room vs. Crime Density')
-ax3.set_title('Entire home/apt vs. Crime Density')
+for i in range(3):
+    for j in range (3):
+        sns.kdeplot(ax=axes[i,j],
+                x=crime[crime['Category']==crime_cat[i]].geometry.x,
+                y=crime[crime['Category']==crime_cat[i]].geometry.y,
+                levels = levels, fill=True, cmap='Reds', alpha=0.5)
+        sns.kdeplot(ax=axes[i,j],
+                x=listings[listings.room_type==prop_cat[j]].geometry.x,
+                y=listings[listings.room_type==prop_cat[j]].geometry.y,
+                levels = levels, fill=True, cmap='Blues', alpha=0.5)
+        axes[i,j].set_title(f'{crime_cat[i]} vs. {prop_cat[j]}')
+       
 plt.show()
 ```
 
-##### Correlation matrix: 
+##### Relationship between Airbnb listings and Crime:
 
 In order to have a sense of the relationship between different airbnb listing type and crime, we plotted Correlation
-
 We decided to use LSOA level because... (Acknowledge possible Modifiable Area Unit Problem, i.e. would the insights be different if a different administrative unit is used instead)
 
-Here is the spatial distribution 
-[Map]
-Here is correlation matrix
-[Matrix]
+```{python}
+lsoa_merge = lsoa
+
+# Spatial crime and lsoa, summarise by count
+sjoin_lsoa = gpd.sjoin(crime, lsoa_merge)
+count_dict = sjoin_lsoa['LSOA21CD'].value_counts().to_dict() # count the values with value counts
+lsoa_merge['crime_count'] = lsoa_merge['LSOA21CD'].map(count_dict) # map it back to lsoa
+
+# Spatial join listings and lsoa, summarise by count
+sjoin_lsoa = gpd.sjoin(listings, lsoa_merge)
+count_dict = sjoin_lsoa['LSOA21CD'].value_counts().to_dict() # count the values with value counts
+lsoa_merge['listing_count'] = lsoa_merge['LSOA21CD'].map(count_dict) # map it back to lsoa
+```
+
+```{python}
+# Spatial join crime by severity and lsoa, summarise by count
+for s in ['Public Order crime','Property crime','Violent crime']:
+    sjoin_lsoa = gpd.sjoin(crime[crime['Category']==s], lsoa_merge)
+    count_dict = sjoin_lsoa['LSOA21CD'].value_counts().to_dict() # count the values with value counts
+    lsoa_merge[s+'_count'] = lsoa_merge['LSOA21CD'].map(count_dict) # map it back to lsoa_merge
+
+# Sptial join listings by room type and lsoa, summarise by count
+for r in ['Shared room','Private room','Entire home/apt']:
+    sjoin_lsoa = gpd.sjoin(listings[listings['room_type']==r], lsoa_merge)
+    count_dict = sjoin_lsoa['LSOA21CD'].value_counts().to_dict() # count the values with value counts
+    lsoa_merge[r+'_count'] = lsoa_merge['LSOA21CD'].map(count_dict) # map it back to lsoa_merge
+```
+
+```{python}
+# Change NA to 0
+print(lsoa_merge.shape)
+lsoa_merge = lsoa_merge.fillna(0)
+print(lsoa_merge.shape)
+```
+
+Here is the spatial distribution \[Map\] 
+
+```{python}
+# Plot crime / listings
+fig, (ax1,ax2) = plt.subplots(1,2, figsize=(18,24))
+lsoa_merge.plot(ax=ax1, column='crime_count', legend=False, cmap='Reds', alpha=0.9)
+lsoa_merge.plot(ax=ax2, column='listing_count', legend=False, cmap='Blues', alpha=0.9)
+
+for ax in fig.get_axes():
+    ax.axes.xaxis.set_visible(False)
+    ax.axes.yaxis.set_visible(False)
+    ax.set_xlim([501000, 563000])
+    ax.set_ylim([155000, 202000])
+
+ax1.set_title('Crime count by LSOA, Sep 2023')
+ax2.set_title('Airbnb Listing count by LSOA, Sep 2023')
+```
+
+```{python}
+# Plot crime / listings by type
+fig, axes = plt.subplots(3,2, figsize=(18,18))
+
+lsoa_merge.plot(ax=axes[0,0], column='Public Order crime_count', cmap='Reds', alpha=0.9)
+lsoa_merge.plot(ax=axes[1,0], column='Property crime_count', cmap='Reds', alpha=0.9)
+lsoa_merge.plot(ax=axes[2,0], column='Violent crime_count',  cmap='Reds', alpha=0.9)
+
+axes[0,0].set_title('Public Order crime by LSOA')
+axes[1,0].set_title('Property crime by LSOA')
+axes[2,0].set_title('Violent crime by LSOA')
+
+lsoa_merge.plot(ax=axes[0,1], column='Shared room_count',cmap='Blues', alpha=0.9)
+lsoa_merge.plot(ax=axes[1,1], column='Private room_count',  cmap='Blues', alpha=0.9)
+lsoa_merge.plot(ax=axes[2,1], column='Entire home/apt_count', cmap='Blues', alpha=0.9)
+
+axes[0,1].set_title('Shared room by LSOA')
+axes[1,1].set_title('Private room by LSOA')
+axes[2,1].set_title('Entire home/apt by LSOA')
+
+for ax in fig.get_axes():
+    ax.axes.xaxis.set_visible(False)
+    ax.axes.yaxis.set_visible(False)
+    ax.set_xlim([501000, 563000])
+    ax.set_ylim([155000, 202000])
+    
+plt.show()
+```
+
+Here is correlation matrix \[Matrix\] 
+
+```{python}
+# Correlation matrix
+
+# Subset last 5 columns
+lsoa_merge_sub = lsoa_merge.iloc[:,-6:]
+
+f = plt.figure(figsize=(15, 15)) # creates a new figure, sets length and width
+
+plt.matshow(lsoa_merge_sub.corr(numeric_only=True), fignum=f.number) # matshow - creates matrix plot
+plt.xticks(range(lsoa_merge_sub.select_dtypes(['number']).shape[1]), lsoa_merge_sub.select_dtypes(['number']).columns, fontsize=14, rotation=45) # add the x axis label
+plt.yticks(range(lsoa_merge_sub.select_dtypes(['number']).shape[1]), lsoa_merge_sub.select_dtypes(['number']).columns, fontsize=14) # add the y axis label
+
+# select_dtypes(['number']) - choose the numeric variables
+cb = plt.colorbar() # add a legend to the right hand (default position)
+cb.ax.tick_params(labelsize=14) # label size
+plt.title( 'Correlation Matrix - Listings type vs Crime category', fontsize=16,y=-0.1)
+```
+
 It shows stronger relationship between Entire home vs. Cirme density, followed by private room and then shared room. This is because bla bla.
 
-##### Spatial Autocorrelation + zooming into areas with anomalies
+##### Zooming into areas with anomalies
 
 \[Codes and graphs\] \[I'm still cleaning this part up, please leave blank\]
 
-##### Connection to #7: 
+##### Connection to #7:
 
 Correaltion doesn't mean causation bla bla, therefore we would like to run a regression. We will pay extra attention to Entire-home etc. because of the high correlation seen above.
 
