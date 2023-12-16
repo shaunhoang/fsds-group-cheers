@@ -477,31 +477,14 @@ path = "~jreades/data"
 # # [PATIENCE] Takes about 4 minutes to download and read in the data
 
 # Crime data filtered for September 2023, within Greater London
-crime = gpd.read_file(
-    cache_data(
-        spath_db
-        + "ewc9skqcfr930whzcjadd/crime.gpkg?rlkey=xjve2mmmmt5h3allsa2zpabya&dl=1",
-        ddir,
-    ),
-    driver="gpkg",
-    low_memory=False,
-)
+crime = gpd.read_file(cache_data(spath_db + "ewc9skqcfr930whzcjadd/crime.gpkg?rlkey=xjve2mmmmt5h3allsa2zpabya&dl=1",ddir) , driver="gpkg", low_memory=False)
 
 # Airbnb listing data scraped on September 2023, filtered within Greater London
-listings = gpd.read_parquet(
-    cache_data(f"{host}/{path}/2023-09-06-listings.geoparquet", ddir)
-)
+listings = gpd.read_parquet(cache_data(f"{host}/{path}/2023-09-06-listings.geoparquet", ddir))
 listings = listings.to_crs(epsg=27700)
 
 # LSOA (London) data concatenated from multiple datasets from London Datastore,
-lsoa_stat = pd.read_csv(
-    cache_data(
-        spath_db
-        + "8zc0g09rlf1yhj6j7yn6n/lsoa_full.csv?rlkey=yopr4hv017rr3iv4e2zus0ifz&dl=1",
-        ddir,
-    ),
-    low_memory=False,
-)
+lsoa_stat = pd.read_csv(cache_data(spath_db + "8zc0g09rlf1yhj6j7yn6n/lsoa_full.csv?rlkey=yopr4hv017rr3iv4e2zus0ifz&dl=1",ddir), low_memory=False)
 
 print("Done.")
 ```
@@ -914,7 +897,7 @@ fig.show()
 
 Correaltion doesn't mean causation bla bla, therefore we would like to run a regression. We will pay extra attention to Entire-home etc. because of the high correlation seen above.
 
-## 7. Drawing on your previous answers, and supporting your response with evidence (e.g. figures, maps, and statistical analysis/models), how *could* this data set be used to inform the regulation of Short-Term Lets (STL) in London?
+## 7.
 
 \[Regression explanation of all the dependent and independent variables\]
 
@@ -931,28 +914,47 @@ Y
 
 -   Crime-relevant / Pop (11)
 
+[Regression Data]
+
+```{python}
+{}
+```
+
+```{python}
+{}
+```
+
 \[Regression codes\]
 
+```{python}
+{}
+```
 
-
-
+Comment
 
 \[Refinement\]
 
+```{python}
+{}
+```
 
-
-
+Comment
 
 \[Results\]
 
+```{python}
+{}
+```
 
-
-
+Comment
 
 \[Discussion\]
 
+```{python}
+{}
+```
 
-
+Comment
 
 \[Policy recommendation\] TBD. Some ideas (NEED LITERATURE TO BACKUP)
 

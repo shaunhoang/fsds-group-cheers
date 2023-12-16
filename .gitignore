@@ -236,3 +236,4 @@ data/lsoa.geojson
 data/metrocrime_1020_0923.csv
 data/Water.gpkg
 *.geoparquet
+.~code_graphs_draft.ipynb
