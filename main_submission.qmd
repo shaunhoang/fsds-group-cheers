@@ -545,21 +545,20 @@ Third, data settings are always influenced by power (D’Ignazio and Klein, 2020
 
 ## 6. With reference to the data (*i.e.* using numbers, figures, maps, and descriptive statistics), what does an analysis of Listing types suggest about the nature of Airbnb lets in London?
 
-Airbnb provides indispensable accommodation for the development of tourism. As a short-term rental platform, the mobility of tenants is one of its major characteristics. Mobility is a factor in crime (Mburu and Helbich, 2016), so recently there has been increasing concern about whether Airbnb, which brings high mobility to the local community, could be linked to an increase or decrease in crime. For example, Xu, Pennington-Gray and Kim (2019) studied the relationship between Airbnb density and crime in Florida and found that certain types of listings do have a significant impact on crime. Therefore, we try to explore whether Airbnb in London could also have an impact on crime. Our research question is: Whether the type of Airbnb listing have an impact on crime in the neighbourhood? However, as the causes of crime are complex, we use the deprivation index, health status, and unemployment as control variables.
+#### Background and research question
+Airbnb provides indispensable accommodation for the development of tourism. As a short-term rental platform, the mobility of tenants is one of its major characteristics. Mobility is a factor in crime (Mburu and Helbich, 2016), so recently there has been increasing concern about whether Airbnb, which brings high mobility to the local community, could be linked to an increase or decrease in crime. For example, Xu, Pennington-Gray and Kim (2019) studied the relationship between Airbnb density and crime in Florida and found that certain types of listings do have a significant impact on crime. Therefore, we try to explore whether Airbnb in London could also have an impact on crime based on Lower Layer Super Output Areas (LSOAs) level. The reason why we choose LSOA level as this allows for a more detailed examination of localized patterns and variations within a borough. Different neighborhoods within a borough can exhibit distinct characteristics that might be overlooked in a broader borough-level analysis as crime rates and housing patterns can vary significantly from one neighborhood to another. Finally, our research question is: Whether the type of Airbnb listing have an impact on crime in the neighbourhood? 
 
-The Airbnb dataset is from the September 2023 updated version provided by Inside Airbnb. The crime dataset is from data.police.uk and has the same time dimension as Airbnb’s. The spatial partitioning dimension in this study is LSOA and is from the Office of National Statistics website.
+#### Data source
+The Airbnb dataset is from the September 2023 updated version provided by Inside Airbnb. The crime dataset is from data.police.uk and has the same time dimension as Airbnb’s. The spatial partitioning dimension in this study is LSOA and is from the Office of National Statistics website. 
 
-As Xu, Pennington-Gray, and Kim (2019) mentioned different types of listings have different impacts, we refer to their classification standards to divide Airbnb housing into private rooms, shared rooms and entire homes. As for crime data, we want to make recommendations more specific to different types and levels of crime, so we classify crime into the following types (Xu, Pennington-ray, and Kim, 2019; Flatley, 2016): - Public order: Public order, Drugs, Possession of weapons, Anti-social behaviour. - Violent (involve force): Robbery, Violence and sexual offences. - Property (without force): Bicycle theft, Burglary, Criminal damage and arson, Shoplifting, Theft from the person, Vehicle crime.
-
-#### Data Source
-
-Where we get data from (Metropolitan Police data, (data.police.uk), and other data from London Datastore, and Office for National Statistics.
-
-#### Narrowing down the data blabla
-
+#### Defining the data
 In order to examine the nature of airbnb and crime relationship, we want to first establish the parameters to focus on a subset of the datasets:
 
-FIRST, According to (paper A), there is relationship bla blab depending on the type of listing. Therefore, for our analysis we will focus on 3 types of airbnb properties. That is, omit Hotel room. Moreover, we trim listing price outliers to control for potentially bogus listings.
+As Xu, Pennington-Gray, and Kim (2019) mentioned different types of listings have different impacts, we refer to their classification standards to divide Airbnb housing into private rooms, shared rooms and entire homes, which will be treated as independent variables. Each variable is defined as follows (*Data Dictionary*, nd):  
+  a) Entire home: Tenants can enjoy an entire whole listing.  
+  b) Private room: The tenant has a private bedroom but may need to share some space with others such as the kitchen.  
+  c) Shared room: The tenant needs to share the bedroom and other spaces with others.  
+When preprocessing Airbnb listings data, we excluded hotel rooms, which are concentrated rather than spread across different residential buildings and have less of an impact on local neighbors. It is worth mentioning that we trim listing price outliers to control for potentially bogus listings. 
 
 ```{python}
 # Clean listings data: outliers, and missing values, split into 3 types by property type
@@ -588,7 +587,12 @@ listings.price.plot.box()
 # listings.plot(column='room_type', cmap='plasma', markersize=.5, alpha=0.15, figsize=(10,7))
 ```
 
-SECOND, the crime will subset to a few crime types that are relevant to tourism (explain why we do this classification). \['Burglary','Robbery','Theft from the person', 'Bicycle theft','Anti-social behaviour', 'Public order','Drugs'\]. Cite paper + cite reason why we're
+As for crime data, as we want to make recommendations more specific to different types and levels of crime, we classify crime into the following types (Xu, Pennington-Gray and Kim, 2019; Flatley, 2016):
+- Public order: public order, drugs, possession of weapons, anti-social behaviour.
+- Violent (involve force): robbery, violence and sexual offences.
+- Property (without force): bicycle theft, burglary, criminal damage and arson, shoplifting, theft from the person, vehicle cri
+These three types of crime will be treated as dependent variables.e.
+e.
 
 ```{python}
 # Clean crime data: outliers, and missing values, split into 2 types by severity
@@ -607,8 +611,6 @@ crime_publicorder = [
     "Drugs",
     "Possession of weapons",
 ]
-# Need rationalization when writing the report
-
 # Omit rows with Other Crime and Other Theft
 crime = crime[~crime["Crime type"].isin(["Other theft", "Other crime"])]
 # Create a new column for crime type
@@ -627,57 +629,8 @@ crime["Category"] = np.where(
 
 #### The spatial visualization of all variables
 
-```{python}
-# KDE plot of listing types vs Crime categories
-# PATIENCE: It takes 3-4 minutes to run
-
-fig, axes = plt.subplots(3, 3, figsize=(32, 24))
-
-# Base
-for ax in fig.get_axes():
-    ax.axes.xaxis.set_visible(False)
-    ax.axes.yaxis.set_visible(False)
-    ax.set_xlim([501000, 563000])
-    ax.set_ylim([155000, 202000])
-    boros.plot(edgecolor="red", facecolor="None", ax=ax)
-
-# KDE maps
-prop_cat = ["Shared room", "Private room", "Entire home/apt"]
-crime_cat = ["Public Order crime", "Property crime", "Violent crime"]
-# Create thresholds
-levels = [0.2, 0.4, 0.6, 0.8, 1]
-
-for i in range(3):
-    for j in range(3):
-        sns.kdeplot(
-            ax=axes[i, j],
-            x=crime[crime["Category"] == crime_cat[i]].geometry.x,
-            y=crime[crime["Category"] == crime_cat[i]].geometry.y,
-            levels=levels,
-            fill=True,
-            cmap="Reds",
-            alpha=0.5,
-        )
-        sns.kdeplot(
-            ax=axes[i, j],
-            x=listings[listings.room_type == prop_cat[j]].geometry.x,
-            y=listings[listings.room_type == prop_cat[j]].geometry.y,
-            levels=levels,
-            fill=True,
-            cmap="Blues",
-            alpha=0.5,
-        )
-        axes[i, j].set_title(f"{crime_cat[i]} vs. {prop_cat[j]}")
-
-plt.show()
-```
-
-Comments on the heat map above
-
-#### Relationship between Airbnb listings and Crime:
-
-In order to have a sense of the relationship between different airbnb listing type and crime, we plotted Correlation
-We decided to use LSOA level because... (Acknowledge possible Modifiable Area Unit Problem, i.e. would the insights be different if a different administrative unit is used instead)
+##### 1. Spatial distribution of each variable
+In our spatial analysis of crime and housing patterns across LSOAs, distinct geographic concentrations emerge. Public order crimes are dispersed citywide, with notable pockets in Westminster and Hillingdon. Property crimes concentrate in central London, particularly in Westminster, while violent crimes exhibit a similar pattern, with Westminster and Hillingdon standing out. Concurrently, the distribution of shared rooms reveals widespread dispersion, with heightened concentrations in Hillingdon, Westminster, Tower Hamlets, and Southwark. Private rooms and entire home exhibit citywide dispersal, with Westminster and Camden featuring prominently in private room concentrations, and the City of London emerging as a hub for entire home. These spatial insights provide valuable data for informed decision-making in law enforcement, housing policies, and urban planning throughout the diverse neighbourhoods of London.
 
 ```{python}
 lsoa_merge = lsoa
@@ -727,24 +680,6 @@ lsoa_merge = lsoa_merge.fillna(0)
 ```
 
 ```{python}
-# Plot crime / listings
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(18, 24))
-lsoa_merge.plot(ax=ax1, column="crime_count", legend=False, cmap="Reds", alpha=0.9)
-lsoa_merge.plot(ax=ax2, column="listing_count", legend=False, cmap="Blues", alpha=0.9)
-
-for ax in fig.get_axes():
-    ax.axes.xaxis.set_visible(False)
-    ax.axes.yaxis.set_visible(False)
-    ax.set_xlim([501000, 563000])
-    ax.set_ylim([155000, 202000])
-
-ax1.set_title("Crime count by LSOA, Sep 2023")
-ax2.set_title("Airbnb Listing count by LSOA, Sep 2023")
-```
-
-##### 1. Spatial distribution
-
-```{python}
 # Plot crime / listings by type
 fig, axes = plt.subplots(3, 2, figsize=(18, 18))
 
@@ -775,7 +710,64 @@ for ax in fig.get_axes():
 plt.show()
 ```
 
-##### 2. Global Correlation
+##### 2. Relationship between Airbnb listings and crime:
+In order to have a sense of the relationship between different airbnb listing type and crime, we plotted kernel density estimation (KDE) analysis heat map and correlation matrix.
+
+##### a. KDE analysis
+By categorising crime types and Airbnb room types, we do kernel density analysis of different types of variables spatially with simple spatial superposition, in order to explore the relationship between the spatial distribution of different room types and different crime types.
+
+The Shared room shows spatial clustering centered on central of London and radiates mainly in the east-west direction. Figure A, Shared room and three types of crime spatial density overlay can be found, they all overlap in the central of London area, public crime and violent crime spatial density range is greater than shared room. while property crime and spatial density is less than Shared room.
+
+The Private room spatially shows clustering in the north-east direction of central of London, showing a semi-circular ring. Figure B, Private room with crime type spatial overlay in the middle direction, they both overlap in the north-west direction of central of London.
+
+Entire home shows a spatial density that is striped across the central of London area. Figure C, overlaps with the central of London area north of the Thames for each offence type.
+
+```{python}
+# KDE plot of listing types vs Crime categories
+# PATIENCE: It takes 3-4 minutes to run
+
+fig, axes = plt.subplots(3, 3, figsize=(32, 24))
+
+# Base
+for ax in fig.get_axes():
+    ax.axes.xaxis.set_visible(False)
+    ax.axes.yaxis.set_visible(False)
+    ax.set_xlim([501000, 563000])
+    ax.set_ylim([155000, 202000])
+    boros.plot(edgecolor="red", facecolor="None", ax=ax)
+
+# KDE maps
+prop_cat = ["Shared room", "Private room", "Entire home/apt"]
+crime_cat = ["Public Order crime", "Property crime", "Violent crime"]
+# Create thresholds
+levels = [0.2, 0.4, 0.6, 0.8, 1]
+
+for i in range(3):
+    for j in range(3):
+        sns.kdeplot(
+            ax=axes[i, j],
+            x=crime[crime["Category"] == crime_cat[i]].geometry.x,
+            y=crime[crime["Category"] == crime_cat[i]].geometry.y,
+            levels=levels,
+            fill=True,
+            cmap="Reds",
+            alpha=0.5,
+        )
+        sns.kdeplot(
+            ax=axes[i, j],
+            x=listings[listings.room_type == prop_cat[j]].geometry.x,
+            y=listings[listings.room_type == prop_cat[j]].geometry.y,
+            levels=levels,
+            fill=True,
+            cmap="Blues",
+            alpha=0.5,
+        )
+        axes[i, j].set_title(f"{crime_cat[i]} vs. {prop_cat[j]}")
+
+plt.show()
+```
+
+##### b. Correlation analysis
 
 ```{python}
 # Make the correlation matrix
@@ -799,15 +791,27 @@ axes.set_title(
 plt.show()
 ```
 
-It shows stronger relationship between Entire home vs. Cirme density, followed by private room and then shared room. This is because bla bla.
+```{python}
+# # Plot crime / listings
+# fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(18, 24))
+# lsoa_merge.plot(ax=ax1, column="crime_count", legend=False, cmap="Reds", alpha=0.9)
+# lsoa_merge.plot(ax=ax2, column="listing_count", legend=False, cmap="Blues", alpha=0.9)
+
+# for ax in fig.get_axes():
+#     ax.axes.xaxis.set_visible(False)
+#     ax.axes.yaxis.set_visible(False)
+#     ax.set_xlim([501000, 563000])
+#     ax.set_ylim([155000, 202000])
+
+# ax1.set_title("Crime count by LSOA, Sep 2023")
+# ax2.set_title("Airbnb Listing count by LSOA, Sep 2023")
+```
+
+From the correlation matrix, the correlation coefficient between each Airbnb room type and each crime type is greater than 0, which means that they are positively correlated. The correlation between entire home and property crime is the strongest, with a correlation coefficient of 0.509. On the contrary, the correlation between shared room and violent crime is the weakest, with a correlation coefficient of 0.173. 
 
 ##### 3. Visualising correlation on a map (not visible on PDF file, please view the HTML file on github)
 
-Below is a bivariate choropleth map showing 2 variables. We see that 
-
-- Obvious observation:...
-- Not obvious observation:...
-- How this informs our subsequent analyses:...
+When looking at the spatial distribution of all Airbnb listings and crimes, it is not surprising to see that the areas that are brown in colour, which means there are a large number of both Airbnb listings and crimes, are mostly concentrated in the central of London such as Westminster. Unexpectedly, an area in Hillington shows a high concentration, which has 198 criminal records and 55 listings. Similarly, the colour of an area of Kingston upon Thames also is brown, with 224 criminal records and 41 listings. These areas received little attention before.
 
 ```{python}
 # Convert shapefil to geojson that the visualisation function requires
@@ -889,13 +893,9 @@ fig.show()
 
 ![Entire home vs Property Crime](https://www.dropbox.com/scl/fi/2rgbdp0f9rfgs1n6dt6i0/newplot-2.png?rlkey=8zr6iippnd7n2v1oa7oncz9y5&dl=1)
 
-- Concentration in the inner core. Not surprising
-- Many areas with high airbnb with low crime (skyblue) in the centre -> correlation not clear
-- Pockets 
+As the entire home and property crime show the strongest correlation, we pay separate attention to their correlation spatial distribution.  From this map, we can see that the situation is similar to the previous one, in which the problem of an area in Hillington and Kingston upon Thames respectively still exists.
 
-##### Connection to #7:
-
-Correaltion doesn't mean causation bla bla, therefore we would like to run a regression. We will pay extra attention to Entire-home etc. because of the high correlation seen above.
+Since we now find that all of the independent variables we set are correlated with the dependent variables, and correlation doesn't mean causation, we would like to do a further regression analysis to determine whether different types of Airbnb listings have an impact on different types of crime.
 
 ## 7.
 
