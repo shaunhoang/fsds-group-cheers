@@ -607,8 +607,6 @@ crime_publicorder = [
     "Drugs",
     "Possession of weapons",
 ]
-# Need rationalization when writing the report
-
 # Omit rows with Other Crime and Other Theft
 crime = crime[~crime["Crime type"].isin(["Other theft", "Other crime"])]
 # Create a new column for crime type
@@ -629,6 +627,53 @@ crime["Category"] = np.where(
 
 ##### 1. Spatial distribution of each variable
 In our spatial analysis of crime and housing patterns across LSOAs, distinct geographic concentrations emerge. Public order crimes are dispersed citywide, with notable pockets in Westminster and Hillingdon. Property crimes concentrate in central London, particularly in Westminster, while violent crimes exhibit a similar pattern, with Westminster and Hillingdon standing out. Concurrently, the distribution of shared rooms reveals widespread dispersion, with heightened concentrations in Hillingdon, Westminster, Tower Hamlets, and Southwark. Private rooms and entire home/apartments exhibit citywide dispersal, with Westminster and Camden featuring prominently in private room concentrations, and the City of London emerging as a hub for entire home/apartments. These spatial insights provide valuable data for informed decision-making in law enforcement, housing policies, and urban planning throughout the diverse neighbourhoods of London.
+
+```{python}
+lsoa_merge = lsoa
+
+# Spatial crime and lsoa, summarise by count
+sjoin_lsoa = gpd.sjoin(crime, lsoa_merge)
+count_dict = (
+    sjoin_lsoa["LSOA21CD"].value_counts().to_dict()
+)  # count the values with value counts
+lsoa_merge["crime_count"] = lsoa_merge["LSOA21CD"].map(
+    count_dict
+)  # map it back to lsoa
+
+# Spatial join listings and lsoa, summarise by count
+sjoin_lsoa = gpd.sjoin(listings, lsoa_merge)
+count_dict = (
+    sjoin_lsoa["LSOA21CD"].value_counts().to_dict()
+)  # count the values with value counts
+lsoa_merge["listing_count"] = lsoa_merge["LSOA21CD"].map(
+    count_dict
+)  # map it back to lsoa
+```
+
+```{python}
+# Spatial join crime by severity and lsoa, summarise by count
+for s in ["Public Order crime", "Property crime", "Violent crime"]:
+    sjoin_lsoa = gpd.sjoin(crime[crime["Category"] == s], lsoa_merge)
+    count_dict = (
+        sjoin_lsoa["LSOA21CD"].value_counts().to_dict()
+    )  # count the values with value counts
+    lsoa_merge[s + "_count"] = lsoa_merge["LSOA21CD"].map(
+        count_dict
+    )  # map it back to lsoa_merge
+
+# Spatial join listings by room type and lsoa, summarise by count
+for r in ["Shared room", "Private room", "Entire home/apt"]:
+    sjoin_lsoa = gpd.sjoin(listings[listings["room_type"] == r], lsoa_merge)
+    count_dict = (
+        sjoin_lsoa["LSOA21CD"].value_counts().to_dict()
+    )  # count the values with value counts
+    lsoa_merge[r + "_count"] = lsoa_merge["LSOA21CD"].map(
+        count_dict
+    )  # map it back to lsoa_merge
+
+# Change NA to 0
+lsoa_merge = lsoa_merge.fillna(0)
+```
 
 ```{python}
 # Plot crime / listings by type
@@ -721,52 +766,7 @@ plt.show()
 ##### b. Correlation analysis
 From the correlation matrix, the correlation coefficient between each Airbnb room type and each crime type is greater than 0, which means that they are positively correlated. The correlation between entire home and property crime is the strongest, with a correlation coefficient of 0.509. On the contrary, the correlation between shared room and violent crime is the weakest, with a correlation coefficient of 0.173. Since we now find that all of the independent variables we set are correlated with the dependent variables, we can do further regression analysis to determine whether different types of Airbnb rooms have an impact on different types of crime.
 
-```{python}
-lsoa_merge = lsoa
 
-# Spatial crime and lsoa, summarise by count
-sjoin_lsoa = gpd.sjoin(crime, lsoa_merge)
-count_dict = (
-    sjoin_lsoa["LSOA21CD"].value_counts().to_dict()
-)  # count the values with value counts
-lsoa_merge["crime_count"] = lsoa_merge["LSOA21CD"].map(
-    count_dict
-)  # map it back to lsoa
-
-# Spatial join listings and lsoa, summarise by count
-sjoin_lsoa = gpd.sjoin(listings, lsoa_merge)
-count_dict = (
-    sjoin_lsoa["LSOA21CD"].value_counts().to_dict()
-)  # count the values with value counts
-lsoa_merge["listing_count"] = lsoa_merge["LSOA21CD"].map(
-    count_dict
-)  # map it back to lsoa
-```
-
-```{python}
-# Spatial join crime by severity and lsoa, summarise by count
-for s in ["Public Order crime", "Property crime", "Violent crime"]:
-    sjoin_lsoa = gpd.sjoin(crime[crime["Category"] == s], lsoa_merge)
-    count_dict = (
-        sjoin_lsoa["LSOA21CD"].value_counts().to_dict()
-    )  # count the values with value counts
-    lsoa_merge[s + "_count"] = lsoa_merge["LSOA21CD"].map(
-        count_dict
-    )  # map it back to lsoa_merge
-
-# Spatial join listings by room type and lsoa, summarise by count
-for r in ["Shared room", "Private room", "Entire home/apt"]:
-    sjoin_lsoa = gpd.sjoin(listings[listings["room_type"] == r], lsoa_merge)
-    count_dict = (
-        sjoin_lsoa["LSOA21CD"].value_counts().to_dict()
-    )  # count the values with value counts
-    lsoa_merge[r + "_count"] = lsoa_merge["LSOA21CD"].map(
-        count_dict
-    )  # map it back to lsoa_merge
-
-# Change NA to 0
-lsoa_merge = lsoa_merge.fillna(0)
-```
 
 ```{python}
 # Make the correlation matrix
