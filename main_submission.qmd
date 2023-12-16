@@ -552,9 +552,13 @@ Airbnb provides indispensable accommodation for the development of tourism. As a
 The Airbnb dataset is from the September 2023 updated version provided by Inside Airbnb. The crime dataset is from data.police.uk and has the same time dimension as Airbnb’s. The spatial partitioning dimension in this study is LSOA and is from the Office of National Statistics website. 
 
 #### Defining the data
-In order to examine the nature of airbnb and crime relationship, we want to first establish the parameters to focus on a subset of the datasets:（解释每个变量的定义）
+In order to examine the nature of airbnb and crime relationship, we want to first establish the parameters to focus on a subset of the datasets:
 
-As Xu, Pennington-Gray, and Kim (2019) mentioned different types of listings have different impacts, we refer to their classification standards to divide Airbnb housing into private rooms, shared rooms and entire homes, which will be treated as independent variables. When preprocessing Airbnb listings data, we excluded hotel rooms, which are concentrated rather than spread across different residential buildings and have less of an impact on local neighbors. It is worth mentioning that we trim listing price outliers to control for potentially bogus listings. 
+As Xu, Pennington-Gray, and Kim (2019) mentioned different types of listings have different impacts, we refer to their classification standards to divide Airbnb housing into private rooms, shared rooms and entire homes, which will be treated as independent variables. Each variable is defined as follows (*Data Dictionary*, nd):  
+  a) Entire home: Tenants can enjoy an entire whole listing.  
+  b) Private room: The tenant has a private bedroom but may need to share some space with others such as the kitchen.  
+  c) Shared room: The tenant needs to share the bedroom and other spaces with others.  
+When preprocessing Airbnb listings data, we excluded hotel rooms, which are concentrated rather than spread across different residential buildings and have less of an impact on local neighbors. It is worth mentioning that we trim listing price outliers to control for potentially bogus listings. 
 
 ```{python}
 # Clean listings data: outliers, and missing values, split into 3 types by property type
@@ -626,7 +630,7 @@ crime["Category"] = np.where(
 #### The spatial visualization of all variables
 
 ##### 1. Spatial distribution of each variable
-In our spatial analysis of crime and housing patterns across LSOAs, distinct geographic concentrations emerge. Public order crimes are dispersed citywide, with notable pockets in Westminster and Hillingdon. Property crimes concentrate in central London, particularly in Westminster, while violent crimes exhibit a similar pattern, with Westminster and Hillingdon standing out. Concurrently, the distribution of shared rooms reveals widespread dispersion, with heightened concentrations in Hillingdon, Westminster, Tower Hamlets, and Southwark. Private rooms and entire home/apartments exhibit citywide dispersal, with Westminster and Camden featuring prominently in private room concentrations, and the City of London emerging as a hub for entire home/apartments. These spatial insights provide valuable data for informed decision-making in law enforcement, housing policies, and urban planning throughout the diverse neighbourhoods of London.
+In our spatial analysis of crime and housing patterns across LSOAs, distinct geographic concentrations emerge. Public order crimes are dispersed citywide, with notable pockets in Westminster and Hillingdon. Property crimes concentrate in central London, particularly in Westminster, while violent crimes exhibit a similar pattern, with Westminster and Hillingdon standing out. Concurrently, the distribution of shared rooms reveals widespread dispersion, with heightened concentrations in Hillingdon, Westminster, Tower Hamlets, and Southwark. Private rooms and entire home exhibit citywide dispersal, with Westminster and Camden featuring prominently in private room concentrations, and the City of London emerging as a hub for entire home. These spatial insights provide valuable data for informed decision-making in law enforcement, housing policies, and urban planning throughout the diverse neighbourhoods of London.
 
 ```{python}
 lsoa_merge = lsoa
@@ -706,17 +710,17 @@ for ax in fig.get_axes():
 plt.show()
 ```
 
-##### 2. Relationship between Airbnb listings and Crime:
+##### 2. Relationship between Airbnb listings and crime:
 In order to have a sense of the relationship between different airbnb listing type and crime, we plotted kernel density estimation (KDE) analysis heat map and correlation matrix.
 
 ##### a. KDE analysis
 By categorising crime types and Airbnb room types, we do kernel density analysis of different types of variables spatially with simple spatial superposition, in order to explore the relationship between the spatial distribution of different room types and different crime types.
 
-The Shared room shows spatial clustering centered on central of  London and radiates mainly in the east-west direction. Figure A, Shared room and three types of crime spatial density overlay can be found, they all overlap in the central of London area, public crime and violent crime spatial density range is greater than shared room. while property crime and spatial density is less than Shared room.
+The Shared room shows spatial clustering centered on central of London and radiates mainly in the east-west direction. Figure A, Shared room and three types of crime spatial density overlay can be found, they all overlap in the central of London area, public crime and violent crime spatial density range is greater than shared room. while property crime and spatial density is less than Shared room.
 
 The Private room spatially shows clustering in the north-east direction of central of London, showing a semi-circular ring. Figure B, Private room with crime type spatial overlay in the middle direction, they both overlap in the north-west direction of central of London.
 
-Entire home/apt shows a spatial density that is striped across the central of London area. Figure C, overlaps with the central of London area north of the Thames for each offence type.
+Entire home shows a spatial density that is striped across the central of London area. Figure C, overlaps with the central of London area north of the Thames for each offence type.
 
 ```{python}
 # KDE plot of listing types vs Crime categories
@@ -764,9 +768,6 @@ plt.show()
 ```
 
 ##### b. Correlation analysis
-From the correlation matrix, the correlation coefficient between each Airbnb room type and each crime type is greater than 0, which means that they are positively correlated. The correlation between entire home and property crime is the strongest, with a correlation coefficient of 0.509. On the contrary, the correlation between shared room and violent crime is the weakest, with a correlation coefficient of 0.173. Since we now find that all of the independent variables we set are correlated with the dependent variables, we can do further regression analysis to determine whether different types of Airbnb rooms have an impact on different types of crime.
-
-
 
 ```{python}
 # Make the correlation matrix
@@ -806,103 +807,95 @@ plt.show()
 # ax2.set_title("Airbnb Listing count by LSOA, Sep 2023")
 ```
 
-It shows stronger relationship between Entire home vs. Cirme density, followed by private room and then shared room. This is because bla bla.
+From the correlation matrix, the correlation coefficient between each Airbnb room type and each crime type is greater than 0, which means that they are positively correlated. The correlation between entire home and property crime is the strongest, with a correlation coefficient of 0.509. On the contrary, the correlation between shared room and violent crime is the weakest, with a correlation coefficient of 0.173. 
 
 ##### 3. Visualising correlation on a map (not visible on PDF file, please view the HTML file on github)
 
-Below is a bivariate choropleth map showing 2 variables. We see that 
-
-- Obvious observation:...
-- Not obvious observation:...
-- How this informs our subsequent analyses:...
+When looking at the spatial distribution of all Airbnb listings and crimes, it is not surprising to see that the areas that are brown in colour, which means there are a large number of both Airbnb listings and crimes, are mostly concentrated in the central of London such as Westminster. Unexpectedly, an area in Hillington shows a high concentration, which has 198 criminal records and 55 listings. Similarly, the colour of an area of Kingston upon Thames also is brown, with 224 criminal records and 41 listings. These areas received little attention before.
 
 ```{python}
-# # Convert shapefil to geojson that the visualisation function requires
-# lsoa_merge_wgs = lsoa_merge.to_crs(4326)
-# lsoa_merge_wgs.to_file(os.path.join("data", "lsoa_merge.geojson"))
-# geojson = json.load(open(os.path.join("data", "lsoa_merge.geojson"), "r"))
-# # Iterate over JSON to add necessary 'id' property
-# for i in range(len(geojson["features"])):
-#     geojson["features"][i]["id"] = geojson["features"][i]["properties"]["LSOA21CD"]
+# Convert shapefil to geojson that the visualisation function requires
+lsoa_merge_wgs = lsoa_merge.to_crs(4326)
+lsoa_merge_wgs.to_file(os.path.join("data", "lsoa_merge.geojson"))
+geojson = json.load(open(os.path.join("data", "lsoa_merge.geojson"), "r"))
+# Iterate over JSON to add necessary 'id' property
+for i in range(len(geojson["features"])):
+    geojson["features"][i]["id"] = geojson["features"][i]["properties"]["LSOA21CD"]
 ```
 
 ```{python}
-# # Load conf defaults and override some variables for our London map
-# conf = conf_defaults()
-# conf["plot_title"] = "Airbnb and Crime in London, Sep 2023"
-# conf["hover_x_label"] = "Crime"  # Label to appear on hover
-# conf["hover_y_label"] = "AirBnb listings"  # Label to appear on hover
-# conf["width"] = 1000
-# conf["center_lat"] = 51.508  # Latitude of the center of the map
-# conf["center_lon"] = -0.1  # Longitude of the center of the map
-# conf["map_zoom"] = 9  # Zoom factor of the map
-# conf["borders_width"] = 0  # Width of the geographic entity borders
+# Load conf defaults and override some variables for our London map
+conf = conf_defaults()
+conf["plot_title"] = "Airbnb and Crime in London, Sep 2023"
+conf["hover_x_label"] = "Crime"  # Label to appear on hover
+conf["hover_y_label"] = "AirBnb listings"  # Label to appear on hover
+conf["width"] = 1000
+conf["center_lat"] = 51.508  # Latitude of the center of the map
+conf["center_lon"] = -0.1  # Longitude of the center of the map
+conf["map_zoom"] = 9  # Zoom factor of the map
+conf["borders_width"] = 0  # Width of the geographic entity borders
 
-# # Define settings for the legend
-# conf["top"] = 0.1  # Vertical position of the top right corner (0: bottom, 1: top)
-# conf["right"] = 0.1  # Horizontal position of the top right corner (0: left, 1: right)
-# conf["line_width"] = 0  # Width of the rectangles' borders
-# conf["legend_x_label"] = "More Crime"  # x variable label for the legend
-# conf["legend_y_label"] = "More Airbnb"  # y variable label for the legend
+# Define settings for the legend
+conf["top"] = 0.1  # Vertical position of the top right corner (0: bottom, 1: top)
+conf["right"] = 0.1  # Horizontal position of the top right corner (0: left, 1: right)
+conf["line_width"] = 0  # Width of the rectangles' borders
+conf["legend_x_label"] = "More Crime"  # x variable label for the legend
+conf["legend_y_label"] = "More Airbnb"  # y variable label for the legend
 
-# # Plot
-# fig = create_bivariate_map(
-#     lsoa_merge,
-#     color_sets["blue-orange"],
-#     geojson,
-#     x="crime_count",
-#     y="listing_count",
-#     ids="LSOA21CD",
-#     name="LSOA21NM",
-#     conf=conf,
-# )
-# fig.show()
+# Plot
+fig = create_bivariate_map(
+    lsoa_merge,
+    color_sets["blue-orange"],
+    geojson,
+    x="crime_count",
+    y="listing_count",
+    ids="LSOA21CD",
+    name="LSOA21NM",
+    conf=conf,
+)
+fig.show()
 ```
 
 ![Airbnb vs Crime](https://www.dropbox.com/scl/fi/e8epq7uc943zvjz2es6si/newplot-1.png?rlkey=rlgydu69vjzuxnuvch8ptu2y1&dl=1)
 
 ```{python}
-# # Load conf defaults and override some variables for our London map
-# conf = conf_defaults()
-# conf["plot_title"] = "Entire-home and Property Crime in London, Sep 2023"
-# conf["hover_x_label"] = "Property Crime"  # Label to appear on hover
-# conf["hover_y_label"] = "Entire home listings"  # Label to appear on hover
-# conf["width"] = 1000
-# conf["center_lat"] = 51.508  # Latitude of the center of the map
-# conf["center_lon"] = -0.1  # Longitude of the center of the map
-# conf["map_zoom"] = 9  # Zoom factor of the map
-# conf["borders_width"] = 0  # Width of the geographic entity borders
+# Load conf defaults and override some variables for our London map
+conf = conf_defaults()
+conf["plot_title"] = "Entire-home and Property Crime in London, Sep 2023"
+conf["hover_x_label"] = "Property Crime"  # Label to appear on hover
+conf["hover_y_label"] = "Entire home listings"  # Label to appear on hover
+conf["width"] = 1000
+conf["center_lat"] = 51.508  # Latitude of the center of the map
+conf["center_lon"] = -0.1  # Longitude of the center of the map
+conf["map_zoom"] = 9  # Zoom factor of the map
+conf["borders_width"] = 0  # Width of the geographic entity borders
 
-# # Define settings for the legend
-# conf["top"] = 0.1  # Vertical position of the top right corner (0: bottom, 1: top)
-# conf["right"] = 0.1  # Horizontal position of the top right corner (0: left, 1: right)
-# conf["line_width"] = 0  # Width of the rectangles' borders
-# conf["legend_x_label"] = "More Crime"  # x variable label for the legend
-# conf["legend_y_label"] = "More Airbnb"  # y variable label for the legend
+# Define settings for the legend
+conf["top"] = 0.1  # Vertical position of the top right corner (0: bottom, 1: top)
+conf["right"] = 0.1  # Horizontal position of the top right corner (0: left, 1: right)
+conf["line_width"] = 0  # Width of the rectangles' borders
+conf["legend_x_label"] = "More Crime"  # x variable label for the legend
+conf["legend_y_label"] = "More Airbnb"  # y variable label for the legend
 
-# # Plot
-# fig = create_bivariate_map(
-#     lsoa_merge,
-#     color_sets["blue-orange"],
-#     geojson,
-#     x="Property crime_count",
-#     y="Entire home/apt_count",
-#     ids="LSOA21CD",
-#     name="LSOA21NM",
-#     conf=conf,
-# )
-# fig.show()
+# Plot
+fig = create_bivariate_map(
+    lsoa_merge,
+    color_sets["blue-orange"],
+    geojson,
+    x="Property crime_count",
+    y="Entire home/apt_count",
+    ids="LSOA21CD",
+    name="LSOA21NM",
+    conf=conf,
+)
+fig.show()
 ```
 
 ![Entire home vs Property Crime](https://www.dropbox.com/scl/fi/2rgbdp0f9rfgs1n6dt6i0/newplot-2.png?rlkey=8zr6iippnd7n2v1oa7oncz9y5&dl=1)
 
-- Concentration in the inner core. Not surprising
-- Many areas with high airbnb with low crime (skyblue) in the centre -> correlation not clear
-- Pockets 
+As the entire home and property crime show the strongest correlation, we pay separate attention to their correlation spatial distribution.  From this map, we can see that the situation is similar to the previous one, in which the problem of an area in Hillington and Kingston upon Thames respectively still exists.
 
-##### Connection to #7:
-
-Correaltion doesn't mean causation bla bla, therefore we would like to run a regression. We will pay extra attention to Entire-home etc. because of the high correlation seen above.
+Since we now find that all of the independent variables we set are correlated with the dependent variables, and correlation doesn't mean causation, we would like to do a further regression analysis to determine whether different types of Airbnb listings have an impact on different types of crime.
 
 ## 7.
 
