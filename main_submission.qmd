@@ -604,8 +604,7 @@ As for crime data, as we want to make recommendations more specific to different
 - Public order: public order, drugs, possession of weapons, anti-social behaviour.
 - Violent (involve force): robbery, violence and sexual offences.
 - Property (without force): bicycle theft, burglary, criminal damage and arson, shoplifting, theft from the person, vehicle cri
-These three types of crime will be treated as dependent variables.e.
-e.
+These three types of crime will be treated as dependent variables.
 
 ```{python}
 # Clean crime data: outliers, and missing values, split into 3 types
@@ -891,7 +890,7 @@ Overall, as the data shows on the map, the distribution of Airbnb listings does 
 
 ## 7. Linear regression analysis
 
-Since the causes of crime are complex, and previous studies have shown that some Airbnb listings type may only have a weak effect on crime (Van Holm and Monaghan, 2021), we attempted to add some controlled variables to improve the interpretability and accuracy of the overall linear regression model. The control variables we selected are shown below:
+Since the causes of crime are complex, and previous studies have shown that some Airbnb listings type may only have a weak effect on crime (Van Holm and Monaghan, 2021), we attempted to add some controlled variables to improve the interpretability and accuracy of the overall linear regression model. The control variables which data are collected from the Office of national statistics are shown below:
 -   Population density: Usual resident (11) / Area (need to get)
 -   Bad+Very Bad Health (120+121) / Pop (11)
 -   deprived 2+ dimension (144+145+146) / Pop (11)
@@ -1235,4 +1234,3 @@ Users are encouraged to comply with local laws and regulations governing short-t
 ## References
 
 Add reference
-
