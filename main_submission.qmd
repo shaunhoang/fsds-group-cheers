@@ -99,9 +99,6 @@ warnings.filterwarnings("ignore")
 
 ```{python}
 # Function to download file from remote
-# Adapted from: https://www.kaggle.com/code/yotkadata/bivariate-choropleth-map-using-plotly
-
-
 def cache_data(src: str, dest: str) -> str:
     """
     Create a folder to store file from URL.
@@ -130,12 +127,10 @@ def cache_data(src: str, dest: str) -> str:
 
 ```{python}
 # Function to create bivariate chropleth map
-
+# Adapted from: https://www.kaggle.com/code/yotkadata/bivariate-choropleth-map-using-plotly
 """
 Function to set default variables
 """
-
-
 def conf_defaults():
     # Define some variables for later use
     conf = {
@@ -517,11 +512,13 @@ lsoa = gpd.read_file(
 ```
 
 ```{python}
-# # Check that all geo dataframes that they are in EPSG:27700
-# crs = []
-# for n in [water,green,boros,lsoa,crime,listings]:
-#     crs.append(n.crs)
-# print(f'Geo dataframes are in {list(set(crs))[0]}')
+#| output: false
+
+# Check that all geo dataframes that they are in EPSG:27700
+crs = []
+for n in [water,green,boros,lsoa,crime,listings]:
+    crs.append(n.crs)
+print(f'Geo dataframes are in {set(crs)}')
 ```
 
 # Response to Questions
@@ -578,6 +575,10 @@ As Xu, Pennington-Gray, and Kim (2019) mentioned different types of listings hav
 When preprocessing Airbnb listings data, we excluded hotel rooms, which are concentrated rather than spread across different residential buildings and have less of an impact on local neighbors. It is worth mentioning that we trim listing price outliers to control for potentially bogus listings. 
 
 ```{python}
+listings.room_type.unique()
+```
+
+```{python}
 # Clean listings data: outliers, and missing values, split into 3 types by property type
 # Omit rows with Hotel room
 listings = listings[~listings["room_type"].isin(["Hotel room"])]
@@ -594,10 +595,14 @@ if listings.price.dtype == "O":
 q1 = listings.price.quantile(0.25)
 q3 = listings.price.quantile(0.75)
 iqr = q3 - q1
-listings = listings[
-    (listings.price >= q1 - 1.5 * iqr) & (listings.price <= q3 + 1.5 * iqr)
-]
-listings.price.plot.hist()
+listings1 = listings[(listings.price >= q1 - 1.5 * iqr) & (listings.price <= q3 + 1.5 * iqr)]
+listings=listings1.copy()
+
+# Plot
+for r in listings.room_type.unique():
+    plt.hist(listings[listings['room_type']==r].price, bins=50, alpha=0.5, label=r)
+plt.legend(loc='upper right')
+plt.show()
 ```
 
 As for crime data, as we want to make recommendations more specific to different types and levels of crime, we classify crime into the following types (Xu, Pennington-Gray and Kim, 2019; Flatley, 2016):
@@ -633,6 +638,15 @@ crime["Category"] = np.where(
         crime["Crime type"].isin(crime_violent), "Violent crime", "Public Order crime"
     ),
 )
+
+
+# Plot them
+fig,ax = plt.subplots(1,3,figsize=[20,5],sharex=True,sharey=True)
+for idx,r in enumerate(crime.Category.unique()):
+    ax[idx].hist(crime[crime['Category']==r].groupby('LSOA code').count().Category, bins=100, alpha=0.5, label=r)
+    ax[idx].legend(loc='upper right')
+fig.suptitle('Histogram of each crime category (LSOA level)',x=0.5,y=0.05)
+plt.show()
 ```
 
 #### The spatial visualization of all variables
@@ -1261,6 +1275,6 @@ Vakhitova, Z.I., Mawby, R.I., Helps, N. and Alston-Knox, C.L. (2023) ‘Tourism 
 
 Vande Bunte, M. (2014) Airbnb verdict in Grand Rapids: 1 room and 2 adults, with a possible exception. The Grand Rapids Press. [Online] Available at: http://www.mlive.com/news/grandrapids/index.ssf/2014/08/airbnb_verdict_in_grand_rapids.html [Accessed Date].
 
-van Holm, E.J. and Monaghan, J. (2021) ‘The relationship of Airbnb to neighborhood calls for service in three cities’. Cities, 116, p. 103241. doi: [10.1016/j.cities.2021.103241](https://doi.org/10.1016/j.cities.2021.103241).
+Van Holm, E.J. and Monaghan, J. (2021) ‘The relationship of Airbnb to neighborhood calls for service in three cities’. Cities, 116, p. 103241. doi: [10.1016/j.cities.2021.103241](https://doi.org/10.1016/j.cities.2021.103241).
 
 Xu, Y.-H., Kim, J. and Pennington-Gray, L., no date. ‘Explore the Spatial Relationship between Airbnb Rental and Crime’.
