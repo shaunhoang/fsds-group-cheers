@@ -571,9 +571,10 @@ The Airbnb dataset is from the September 2023 updated version provided by Inside
 In order to examine the nature of airbnb and crime relationship, we want to first establish the parameters to focus on a subset of the datasets:
 
 As Xu, Pennington-Gray, and Kim (2019) mentioned different types of listings have different impacts, we refer to their classification standards to divide Airbnb housing into private rooms, shared rooms and entire homes, which will be treated as independent variables. Each variable is defined as follows (*Data Dictionary*, nd):  
-  a) Entire home: Tenants can enjoy an entire whole listing.  
-  b) Private room: The tenant has a private bedroom but may need to share some space with others such as the kitchen.  
-  c) Shared room: The tenant needs to share the bedroom and other spaces with others.  
+- Entire home: Tenants can enjoy an entire whole listing.  
+- Private room: The tenant has a private bedroom but may need to share some space with others such as the kitchen.  
+- Shared room: The tenant needs to share the bedroom and other spaces with others.
+
 When preprocessing Airbnb listings data, we excluded hotel rooms, which are concentrated rather than spread across different residential buildings and have less of an impact on local neighbors. It is worth mentioning that we trim listing price outliers to control for potentially bogus listings. 
 
 ```{python}
@@ -817,36 +818,36 @@ for i in range(len(geojson["features"])):
 ```
 
 ```{python}
-# # Load conf defaults and override some variables for our London map
-# conf = conf_defaults()
-# conf["plot_title"] = "Airbnb and Crime in London, Sep 2023"
-# conf["hover_x_label"] = "Crime"  # Label to appear on hover
-# conf["hover_y_label"] = "AirBnb listings"  # Label to appear on hover
-# conf["width"] = 1000
-# conf["center_lat"] = 51.508  # Latitude of the center of the map
-# conf["center_lon"] = -0.1  # Longitude of the center of the map
-# conf["map_zoom"] = 9  # Zoom factor of the map
-# conf["borders_width"] = 0  # Width of the geographic entity borders
+# Load conf defaults and override some variables for our London map
+conf = conf_defaults()
+conf["plot_title"] = "Airbnb and Crime in London, Sep 2023"
+conf["hover_x_label"] = "Crime"  # Label to appear on hover
+conf["hover_y_label"] = "AirBnb listings"  # Label to appear on hover
+conf["width"] = 1000
+conf["center_lat"] = 51.508  # Latitude of the center of the map
+conf["center_lon"] = -0.1  # Longitude of the center of the map
+conf["map_zoom"] = 9  # Zoom factor of the map
+conf["borders_width"] = 0  # Width of the geographic entity borders
 
-# # Define settings for the legend
-# conf["top"] = 0.1  # Vertical position of the top right corner (0: bottom, 1: top)
-# conf["right"] = 0.1  # Horizontal position of the top right corner (0: left, 1: right)
-# conf["line_width"] = 0  # Width of the rectangles' borders
-# conf["legend_x_label"] = "More Crime"  # x variable label for the legend
-# conf["legend_y_label"] = "More Airbnb"  # y variable label for the legend
+# Define settings for the legend
+conf["top"] = 0.1  # Vertical position of the top right corner (0: bottom, 1: top)
+conf["right"] = 0.1  # Horizontal position of the top right corner (0: left, 1: right)
+conf["line_width"] = 0  # Width of the rectangles' borders
+conf["legend_x_label"] = "More Crime"  # x variable label for the legend
+conf["legend_y_label"] = "More Airbnb"  # y variable label for the legend
 
-# # Plot
-# fig = create_bivariate_map(
-#     lsoa_merge,
-#     color_sets["blue-orange"],
-#     geojson,
-#     x="crime_count",
-#     y="listing_count",
-#     ids="LSOA21CD",
-#     name="LSOA21NM",
-#     conf=conf,
-# )
-# fig.show()
+# Plot
+fig = create_bivariate_map(
+    lsoa_merge,
+    color_sets["blue-orange"],
+    geojson,
+    x="crime_count",
+    y="listing_count",
+    ids="LSOA21CD",
+    name="LSOA21NM",
+    conf=conf,
+)
+fig.show()
 ```
 
 <img src="https://www.dropbox.com/scl/fi/e8epq7uc943zvjz2es6si/newplot-1.png?rlkey=rlgydu69vjzuxnuvch8ptu2y1&dl=1" alt="Airbnb vs Crime" style="width:1000px;"/>
@@ -886,24 +887,20 @@ for i in range(len(geojson["features"])):
 
 As the entire home and property crime show the strongest correlation, we pay separate attention to their correlation spatial distribution.  From this map, we can see that the situation is similar to the previous one, in which the problem of an area in Hillington and Kingston upon Thames respectively still exists.
 
-Since we now find that all of the independent variables we set are correlated with the dependent variables, and correlation doesn't mean causation, we would like to do a further regression analysis to determine whether different types of Airbnb listings have an impact on different types of crime.
+Overall, as the data shows on the map, the distribution of Airbnb listings does align with the distribution of crime in many areas. Similarly, we find that all of the independent variables we set are correlated with the dependent variables. However, correlation does not mean causation, so we would like to do a further regression analysis to determine whether different types of Airbnb listings actually have an impact on different types of crime.
 
-## 7.
+## 7. Linear regression analysis
 
-\[Regression explanation of all the dependent and independent variables\]
-
-Chosen columns: X
-
+Since the causes of crime are complex, and previous studies have shown that some Airbnb listings type may only have a weak effect on crime (Van Holm and Monaghan, 2021), we attempted to add some controlled variables to improve the interpretability and accuracy of the overall linear regression model. The control variables we selected are shown below:
 -   Population density: Usual resident (11) / Area (need to get)
 -   Bad+Very Bad Health (120+121) / Pop (11)
 -   deprived 2+ dimension (144+145+146) / Pop (11)
 -   Unemployed (72) / Pop (11)
 -   Young people (17+18+19) / Pop (11)
--   3x Airbnb listings (3 types) / Household number (3)
 
-Y
+These variables directly or indirectly provide a level of deprivation, which serve as a significant socioeconomic indicator linked to crime patterns (*Crimes recorded by neighbourhood income deprivation decile in London*, 2022). By understanding the degree of deprivation in different neighborhoods we can see potential correlations between economic hardship and crime rates. Higher levels of deprivation in specific areas may indicate increased vulnerability to certain types of crimes. This variable is instrumental in identifying and addressing underlying factors contributing to crime in specific locations.
 
--   Crime-relevant / Pop (11)
+Mentioned again, the other three independent variables are different types of Airbnb listings, and the three dependent variables are different crime types.
 
 #### Preparing Regression Data
 
@@ -1078,7 +1075,11 @@ for i in ['crime_','Property crime_', 'Violent crime_', 'Public Order crime_']:
     results.append(OLSmodel)
 ```
 
-Comment
+After linear regression analysis, we come to the following conclusions:
+
+- For property crime, only the entire home has a positive impact on it. 
+- For violent crime, all listing types have a positive impact on it. 
+- For public order crime, all room types have a positive impact on it
 
 #### Residual Analysis to check for OLS assumptions
 
@@ -1210,20 +1211,28 @@ plt.tight_layout()
 plt.show()
 ```
 
-Comment
+Based on all of our analysis, we would like to make the following recommendations to Airbnb users, the Airbnb company and the government to minimize Airbnb's impact on crime.
 
-\[Policy recommendation\] TBD. Some ideas (NEED LITERATURE TO BACKUP)
+For Governments:
+- To enhance the safety of short-term rentals, governments should consider implementing a Registration/Licensing Scheme akin to those for hotels. This initiative could include regulations like owner-occupied residences, a cap on the number of renters, and neighbour notifications (Vande Bunte, 2014).
+- Collaborating closely with Airbnb is also crucial to establish stringent criteria for vetting listings and mitigate criminal activities effectively (Wachsmuth and Weisler, 2018). Also, the government can ask Airbnb to share data with local police departments to help them identify areas with high Airbnb density.
+- To provide a threshold in areas with particularly high crime rates and legislate to limit the number of Airbnb listings.
+- To add more police presence in places where Airbnb is especially dense.
 
-If there are relationships
+For Airbnb:
+- Enhancing background checks for hosts and tenants will contribute to mitigating community crime rates (Barron, Kung, and Proserpio, 2018).
+- To ensure responsive security measures are in place, particularly after receiving security reports about listings, including the potential removal of listings after multiple reports (Grind and Shifflett, 2019). It will further add to the platform's commitment to user safety.
+- To pay for additional security cameras in areas with high Airbnb density such as listings in the City of London and Hillington.
+- Permanently block the use of Airbnb for users who do not comply with Airbnb's guidelines or who are reported for illegal actions such as committing a crime against a neighbour/in the property.
+- Set up a special channel for tenants to easily complain to the landlord or shared tenants.
 
-1.  Reactive: Increase police presence in areas with high Airbnb density
-2.  Proactive: Limit Airbnb density in areas with high crime rates of a certain type
-3.  Collaborative: Airbnb to share data with local police departments to help them identify areas with high Airbnb density
-4.  Punitive: Airbnb to pay a fine for every crime incident that occurs in areas with high Airbnb density
-5.  Preventive: Airbnb to pay for additional security cameras in areas with high Airbnb density
+For Users:
 
-If not: Other cities this but London doesn't see the same issue. Should look at improving crime by improving other aspects...
+Users are encouraged to comply with local laws and regulations governing short-term rentals.  
+- Users should be aware of and adhere to regulations, such as the New York State Multiple Dwelling Law affecting rentals (Schneiderman, 2014), which are vital for fostering a secure environment.  
+- The implementation of education and outreach programs, in line with the recommendations of Felson et al. (2019), can significantly contribute to crime reduction and heightened public awareness.
 
 ## References
 
 Add reference
+
