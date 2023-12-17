@@ -483,6 +483,8 @@ path = "~jreades/data"
 ```
 
 ```{python}
+#| output: false
+
 # Read in airbnb, crime, and lsoa stats files. https://www.dropbox.com/home/casa/casa_fsds_cheers.
 # Some files have been cleaned, cropped, turned into gdf and hosted on dropbox to save time later on. See cleandata.ipynb in the Github repo for more details on how these files were created.
 # # [PATIENCE] Takes about 4 minutes to download and read in the data
@@ -496,11 +498,11 @@ listings = listings.to_crs(epsg=27700)
 
 # LSOA (London) data concatenated from multiple datasets from London Datastore,
 lsoa_stat = pd.read_csv(cache_data(spath_db + "8zc0g09rlf1yhj6j7yn6n/lsoa_full.csv?rlkey=yopr4hv017rr3iv4e2zus0ifz&dl=1",ddir), low_memory=False)
-
-print("Done.")
 ```
 
 ```{python}
+#| output: false
+
 # Read in shapefiles (2 mins)
 water = gpd.read_file(cache_data(spath + "Water.gpkg?raw=true", ddir))
 green = gpd.read_file(cache_data(spath + "Greenspace.gpkg?raw=true", ddir))
@@ -512,15 +514,14 @@ lsoa = gpd.read_file(
         ddir,
     )
 )
-print("Done.")
 ```
 
 ```{python}
-# Check that all geo dataframes that they are in EPSG:27700
-crs = []
-for n in [water,green,boros,lsoa,crime,listings]:
-    crs.append(n.crs)
-print(f'Geo dataframes are in {list(set(crs))[0]}')
+# # Check that all geo dataframes that they are in EPSG:27700
+# crs = []
+# for n in [water,green,boros,lsoa,crime,listings]:
+#     crs.append(n.crs)
+# print(f'Geo dataframes are in {list(set(crs))[0]}')
 ```
 
 # Response to Questions
@@ -606,7 +607,7 @@ These three types of crime will be treated as dependent variables.e.
 e.
 
 ```{python}
-# Clean crime data: outliers, and missing values, split into 2 types by severity
+# Clean crime data: outliers, and missing values, split into 3 types
 crime_property = [
     "Burglary",
     "Criminal damage and arson",
@@ -816,39 +817,39 @@ for i in range(len(geojson["features"])):
 ```
 
 ```{python}
-# Load conf defaults and override some variables for our London map
-conf = conf_defaults()
-conf["plot_title"] = "Airbnb and Crime in London, Sep 2023"
-conf["hover_x_label"] = "Crime"  # Label to appear on hover
-conf["hover_y_label"] = "AirBnb listings"  # Label to appear on hover
-conf["width"] = 1000
-conf["center_lat"] = 51.508  # Latitude of the center of the map
-conf["center_lon"] = -0.1  # Longitude of the center of the map
-conf["map_zoom"] = 9  # Zoom factor of the map
-conf["borders_width"] = 0  # Width of the geographic entity borders
+# # Load conf defaults and override some variables for our London map
+# conf = conf_defaults()
+# conf["plot_title"] = "Airbnb and Crime in London, Sep 2023"
+# conf["hover_x_label"] = "Crime"  # Label to appear on hover
+# conf["hover_y_label"] = "AirBnb listings"  # Label to appear on hover
+# conf["width"] = 1000
+# conf["center_lat"] = 51.508  # Latitude of the center of the map
+# conf["center_lon"] = -0.1  # Longitude of the center of the map
+# conf["map_zoom"] = 9  # Zoom factor of the map
+# conf["borders_width"] = 0  # Width of the geographic entity borders
 
-# Define settings for the legend
-conf["top"] = 0.1  # Vertical position of the top right corner (0: bottom, 1: top)
-conf["right"] = 0.1  # Horizontal position of the top right corner (0: left, 1: right)
-conf["line_width"] = 0  # Width of the rectangles' borders
-conf["legend_x_label"] = "More Crime"  # x variable label for the legend
-conf["legend_y_label"] = "More Airbnb"  # y variable label for the legend
+# # Define settings for the legend
+# conf["top"] = 0.1  # Vertical position of the top right corner (0: bottom, 1: top)
+# conf["right"] = 0.1  # Horizontal position of the top right corner (0: left, 1: right)
+# conf["line_width"] = 0  # Width of the rectangles' borders
+# conf["legend_x_label"] = "More Crime"  # x variable label for the legend
+# conf["legend_y_label"] = "More Airbnb"  # y variable label for the legend
 
-# Plot
-fig = create_bivariate_map(
-    lsoa_merge,
-    color_sets["blue-orange"],
-    geojson,
-    x="crime_count",
-    y="listing_count",
-    ids="LSOA21CD",
-    name="LSOA21NM",
-    conf=conf,
-)
-fig.show()
+# # Plot
+# fig = create_bivariate_map(
+#     lsoa_merge,
+#     color_sets["blue-orange"],
+#     geojson,
+#     x="crime_count",
+#     y="listing_count",
+#     ids="LSOA21CD",
+#     name="LSOA21NM",
+#     conf=conf,
+# )
+# fig.show()
 ```
 
-![Airbnb vs Crime](https://www.dropbox.com/scl/fi/e8epq7uc943zvjz2es6si/newplot-1.png?rlkey=rlgydu69vjzuxnuvch8ptu2y1&dl=1)
+<img src="https://www.dropbox.com/scl/fi/e8epq7uc943zvjz2es6si/newplot-1.png?rlkey=rlgydu69vjzuxnuvch8ptu2y1&dl=1" alt="Airbnb vs Crime" style="width:1000px;"/>
 
 ```{python}
 # # Load conf defaults and override some variables for our London map
@@ -882,8 +883,6 @@ fig.show()
 # )
 # fig.show()
 ```
-
-<!-- ![Entire home vs Property Crime](https://www.dropbox.com/scl/fi/2rgbdp0f9rfgs1n6dt6i0/newplot-2.png?rlkey=8zr6iippnd7n2v1oa7oncz9y5&dl=1) -->
 
 As the entire home and property crime show the strongest correlation, we pay separate attention to their correlation spatial distribution.  From this map, we can see that the situation is similar to the previous one, in which the problem of an area in Hillington and Kingston upon Thames respectively still exists.
 
@@ -951,7 +950,6 @@ lsoa_merge1['pop_density'] = lsoa_merge1['All usual residents']/lsoa_merge1['are
 regressiondata = lsoa_merge1.copy()
 # Keep ones needed for regression
 regressiondata = regressiondata.loc[:,[col for col in regressiondata.columns if 'density' in col]]
-regressiondata.columns
 ```
 
 ```{python}
@@ -999,7 +997,6 @@ for col in cols:
     regressiondata[col+'_log'] = np.log(regressiondata[col]+c)
 # Drop original columns
 regressiondata.drop(cols,axis=1,inplace=True)
-regressiondata.columns
 ```
 
 ```{python}
@@ -1048,7 +1045,6 @@ regressiondata_VIF = regressiondata.drop([col for col in regressiondata.columns 
 # drop columns with high VIF
 regressiondata_VIF = drop_column_using_vif_(regressiondata_VIF)
 selected_cols = regressiondata_VIF.columns.tolist()
-selected_cols
 ```
 
 ```{python}
@@ -1111,7 +1107,7 @@ plt.show()
 
 Comment
 
-#### Residual Moran's I to check if there is Spatial Lag, and to estimate impact of Spatial Error
+#### Residual Moran's I to check if there is Spatial Lag within the Residuals (spatial autocorrelation unaccounted for in the model)
 
 ```{python}
 # Local Moran's I for residual of OLSmodel
@@ -1124,7 +1120,7 @@ residuals = results[0].resid
 moran = Moran(residuals, w)
 print(f'Residual Moran\'s I - {models[0].endog_names}: {moran.I}')
 moran_loc = Moran_Local(residuals, w)
-lisa_cluster(moran_loc, lsoa_merge, p=0.05, figsize = (9,9))
+lisa_cluster(moran_loc, lsoa_merge, p=0.05, figsize = (9,9),legend_kwds={'loc': 'lower right'})
 plt.title(f'Residuals Local Moran\'s I - {models[0].endog_names}')
 plt.show()
 
@@ -1135,7 +1131,7 @@ for i in range(3):
     moran = Moran(residuals, w)
     print(f'Residual Moran\'s I - {models[i+1].endog_names}: {moran.I}')
     moran_loc = Moran_Local(residuals, w)
-    lisa_cluster(moran_loc, lsoa_merge, p=0.05,ax=ax[i])
+    lisa_cluster(moran_loc, lsoa_merge, p=0.05,ax=ax[i],legend_kwds={'loc': 'lower right'})
     ax[i].title.set_text(f'Residuals Local Moran\'s I - {models[i+1].endog_names}')
 plt.show()
 ```
@@ -1191,7 +1187,6 @@ gwr_results = GWR(g_coords, g_y, g_X, gwr_bw).fit()
 lsoa_merge['gwr_intercept'] = gwr_results.params[:,0]
 for i in range(9):
     lsoa_merge['gwr_'+selected_cols[i]] = gwr_results.params[:,i+1]
-lsoa_merge.columns
 ```
 
 ```{python}
@@ -1204,9 +1199,9 @@ gwr_filtered_t = gwr_results.filter_tvals(alpha = 0.05)
 list = ['Entire home/apt','Private room','Shared room']
 fig, axes = plt.subplots(nrows=3, ncols=2, figsize=(18,24))
 for i in range(3):
-    lsoa_merge.plot(column=f'gwr_{list[i]}_density_log', cmap = 'coolwarm', linewidth=0.01, scheme = 'FisherJenks', k=5, legend=True, legend_kwds={'bbox_to_anchor':(1.10, 0.96)},  ax=axes[i,0])
-    lsoa_merge.plot(column=f'gwr_{list[i]}_density_log', cmap = 'coolwarm', linewidth=0.05, scheme = 'FisherJenks', k=5, legend=False, legend_kwds={'bbox_to_anchor':(1.10, 0.96)},  ax=axes[i,1])
-    lsoa_merge[gwr_filtered_t[:,1] == 0].plot(color='white', linewidth=0.05, edgecolor='black', ax=axes[i,1])
+    lsoa_merge.plot(column=f'gwr_{list[i]}_density_log', cmap = 'coolwarm', linewidth=0.001, scheme = 'naturalbreaks', k=5, legend=True, legend_kwds={'bbox_to_anchor':(1.10, 0.96)},  ax=axes[i,0])
+    lsoa_merge.plot(column=f'gwr_{list[i]}_density_log', cmap = 'coolwarm', linewidth=0.001, scheme = 'naturalbreaks', k=5, legend=False, legend_kwds={'bbox_to_anchor':(1.10, 0.96)},  ax=axes[i,1])
+    lsoa_merge[gwr_filtered_t[:,1] == 0].plot(color='white', linewidth=0.001, edgecolor='white', ax=axes[i,1])
     axes[i,0].axis("off")
     axes[i,1].axis("off")
     axes[i,0].set_title(f'({i+1}a) GWR: {list[i]} vs. Crime, all coeffs', fontsize=12)
