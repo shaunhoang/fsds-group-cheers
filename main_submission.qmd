@@ -1233,4 +1233,36 @@ Users are encouraged to comply with local laws and regulations governing short-t
 
 ## References
 
-Add reference
+Barron, K., Kung, E. and Proserpio, D. (2018) Analysis of the impact of Airbnb rentals on community crime rates.
+
+Cox, M. and Slee, T. (2016) How Airbnb’s data hid the facts in New York City. Inside Airbnb, [Online] Available at: http://insideairbnb.com/research/how-airbnb-hid-the-facts-in-nyc [Accessed 14 December 2023].
+
+Crime and income deprivation, no date. [Online] Available at: [https://trustforlondon.org.uk/data/crime-and-income-deprivation/#:~:text=Overall%2C 52%25 more crimes were,the least income-deprived 10%25](https://trustforlondon.org.uk/data/crime-and-income-deprivation/#:~:text=Overall%2C%2052%25%20more%20crimes%20were,the%20least%20income%2Ddeprived%2010%25) [Accessed 14 December 2023].
+
+D’Ignazio, C. and Klein, L.F. (2020) ‘The Numbers Don’t Speak for Themselves’, in Data Feminism. [Online] United States: MIT Libraries Experimental Collections Fund.
+
+Flatley, J. (2016) Focus on property crime: year ending March 2016. [Online] Available at: https://www.ons.gov.uk/peoplepopulationandcommunity/crimeandjustice/bulletins/focusonpropertycrime/yearendingmarch2016 [Accessed 14 December 2023].
+
+Felson, M., Belanger, M., Bichler, G., Bruzdzinski, C., Campbell, G., Fried, C., et al. (2019) Study on how education and outreach can reduce crime and increase public awareness.
+
+Get the Data, no date. [Online] Available at: http://insideairbnb.com/get-the-data [Accessed 14 December 2023].
+
+Grind, K. and Shifflett, S. (2019) Shooting, sex crime and theft: Airbnb takes halting steps to protect its users. Wall Street Journal, 26 December.
+
+Hua, N., Li, B. and Zhang, T. (2020) ‘Crime research in hospitality and tourism’. International Journal of Contemporary Hospitality Management, 32(3), pp. 1299–1323. doi: [10.1108/IJCHM-09-2019-0750](https://doi.org/10.1108/IJCHM-09-2019-0750).
+
+Inside Airbnb Data Dictionary (no date). https://docs.google.com/spreadsheets/d/1iWCNJcSutYqpULSQHlNyGInUvHg2BoUGoNRIGa6Szc4/edit?usp=sharing.
+
+Ke, L., O'Brien, D.T. and Heydari, B. (2021) ‘Airbnb and neighborhood crime: The incursion of tourists or the erosion of local social dynamics?’ PLoS ONE, 16(7), pp. e0253315–e0253315. doi: [10.1371/journal.pone.0253315](https://doi.org/10.1371/journal.pone.0253315).
+
+Mehmed, N.R., no date. ‘Airbnb and the Sharing Economy: Policy Implications for Local Governments’.
+
+Schneiderman, E. (2014) Airbnb in the city. New York State Office of the Attorney General. [Online] Available at: http://www.ag.ny.gov/pdfs/Airbnbreport.pdf [Accessed 14 December 2023].
+
+Vakhitova, Z.I., Mawby, R.I., Helps, N. and Alston-Knox, C.L. (2023) ‘Tourism and Crime: An Exploratory Study of Burglary From Tourist Accommodation From the Criminal Opportunity Perspective’. Crime & Delinquency, 69(11), pp. 2164–2193. doi: [10.1177/00111287221106962](https://doi.org/10.1177/00111287221106962).
+
+Vande Bunte, M. (2014) Airbnb verdict in Grand Rapids: 1 room and 2 adults, with a possible exception. The Grand Rapids Press. [Online] Available at: http://www.mlive.com/news/grandrapids/index.ssf/2014/08/airbnb_verdict_in_grand_rapids.html [Accessed Date].
+
+van Holm, E.J. and Monaghan, J. (2021) ‘The relationship of Airbnb to neighborhood calls for service in three cities’. Cities, 116, p. 103241. doi: [10.1016/j.cities.2021.103241](https://doi.org/10.1016/j.cities.2021.103241).
+
+Xu, Y.-H., Kim, J. and Pennington-Gray, L., no date. ‘Explore the Spatial Relationship between Airbnb Rental and Crime’.
