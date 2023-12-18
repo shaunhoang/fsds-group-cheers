@@ -904,12 +904,8 @@ Overall, as the data shows on the map, the distribution of Airbnb listings does 
 
 ## 7. Linear regression analysis
 
-Since the causes of crime are complex, and previous studies have shown that some Airbnb listings type may only have a weak effect on crime (Van Holm and Monaghan, 2021), we attempted to add some controlled variables to improve the interpretability and accuracy of the overall linear regression model. The control variables which data are collected from the Office of national statistics are shown below:
--   Population density: Usual resident (11) / Area (need to get)
--   Bad+Very Bad Health (120+121) / Pop (11)
--   deprived 2+ dimension (144+145+146) / Pop (11)
--   Unemployed (72) / Pop (11)
--   Young people (17+18+19) / Pop (11)
+Since the causes of crime are complex, and previous studies have shown that some Airbnb listings type may only have a weak effect on crime (Van Holm and Monaghan, 2021), we attempted to add some controlled variables to improve the interpretability and accuracy of the overall linear regression model. We collected data from the Office of national statistics and proposed the following variables: unemployed density, young people (15-24 ages) density, the density of deprivation index which equals or above 3, the density of education level which equals or above Level 3, the density of tenants (excludes from Airbnb but includes from the council).
+ density
 
 These variables directly or indirectly provide a level of deprivation, which serve as a significant socioeconomic indicator linked to crime patterns (*Crimes recorded by neighbourhood income deprivation decile in London*, 2022). By understanding the degree of deprivation in different neighborhoods we can see potential correlations between economic hardship and crime rates. Higher levels of deprivation in specific areas may indicate increased vulnerability to certain types of crimes. This variable is instrumental in identifying and addressing underlying factors contributing to crime in specific locations.
 
@@ -1092,7 +1088,7 @@ After linear regression analysis, we come to the following conclusions:
 
 - For property crime, only the entire home has a positive impact on it. 
 - For violent crime, all listing types have a positive impact on it. 
-- For public order crime, all room types have a positive impact on it
+- For public order crime, all listing types have a positive impact on it
 
 #### Residual Analysis to check for OLS assumptions
 
@@ -1278,3 +1274,8 @@ Vande Bunte, M. (2014) Airbnb verdict in Grand Rapids: 1 room and 2 adults, with
 Van Holm, E.J. and Monaghan, J. (2021) ‘The relationship of Airbnb to neighborhood calls for service in three cities’. Cities, 116, p. 103241. doi: [10.1016/j.cities.2021.103241](https://doi.org/10.1016/j.cities.2021.103241).
 
 Xu, Y.-H., Kim, J. and Pennington-Gray, L., no date. ‘Explore the Spatial Relationship between Airbnb Rental and Crime’.
+
+
+
+
+
