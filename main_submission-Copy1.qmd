@@ -1,0 +1,1327 @@
+---
+bibliography: bio.bib
+csl: harvard-cite-them-right.csl
+title: CHEER-UP's FSDS Group Project
+execute:
+  echo: false
+format:
+  html:
+    theme:
+      - minty
+      - css/web.scss
+    code-copy: true
+    code-link: true
+    toc: true
+    toc-title: On this page
+    toc-depth: 2
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+  pdf:
+    include-in-header:
+      text: |
+        \addtokomafont{disposition}{\rmfamily}
+    mainfont: Spectral
+    sansfont: Roboto
+    monofont: JetBrainsMono-Regular
+    papersize: a4
+    geometry:
+      - top=25mm
+      - left=40mm
+      - right=30mm
+      - bottom=25mm
+      - heightrounded
+    toc: false
+    number-sections: false
+    colorlinks: true
+    highlight-style: github
+jupyter:
+  jupytext:
+    text_representation:
+      extension: .qmd
+      format_name: quarto
+      format_version: '1.0'
+      jupytext_version: 1.15.2
+  kernelspec:
+    display_name: Python 3 (ipykernel)
+    language: python
+    name: python3
+---
+
+## Declaration of Authorship {.unnumbered .unlisted}
+
+We, CHEER UP Group, confirm that the work presented in this assessment is our own. Where information has been derived from other sources, we confirm that this has been indicated in the work. Where a Large Language Model such as ChatGPT has been used we confirm that we have made its contribution to the final submission clear.
+
+Date:
+
+Student Numbers:
+
+## Brief Group Reflection
+
+| What Went Well | What Was Challenging |
+|----------------|----------------------|
+| A                  | B                    |
+| C              | D                    |
+
+## Priorities for Feedback
+
+Are there any areas on which you would appreciate more detailed feedback if we're able to offer it?
+
+{{< pagebreak >}}
+
+```{python}
+import pandas as pd
+import geopandas as gpd
+import numpy as np
+import seaborn as sns
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import plotly.graph_objs as go
+from requests import get
+from spreg import GM_Error_Het
+from libpysal.weights import Queen
+import libpysal as ps
+from mgwr.gwr import GWR, MGWR
+from mgwr.sel_bw import Sel_BW
+import json
+import os
+import warnings
+from urllib.parse import urlparse
+import statsmodels.api as sm
+import pysal
+from esda.moran import Moran
+from esda.moran import Moran_Local
+from splot.esda import lisa_cluster
+
+# warnings.simplefilter(action="ignore", category=FutureWarning)
+warnings.filterwarnings("ignore")
+```
+
+```{python}
+# Function to download file from remote
+def cache_data(src: str, dest: str) -> str:
+    """
+    Create a folder to store file from URL.
+    If folder doesn't already exists, then create one, before writing the file.
+
+    src : URL
+    dest : location on local drive
+    """
+    url = urlparse(src)  # We assume that this is some kind of valid URL
+    fn = os.path.split(url.path)[-1]  # Extract the filename
+    dfn = os.path.join(dest, fn)  # Destination filename as path
+
+    if not os.path.isfile(dfn):
+        print(f"{dfn} not found, downloading!")
+        path = os.path.split(dest)
+        if len(path) >= 1 and path[0] != "":
+            os.makedirs(os.path.join(*path), exist_ok=True)
+        with open(dfn, "wb") as file:
+            response = get(src)
+            file.write(response.content)
+        print("\tDone downloading...")
+    else:
+        print(f"Found {dfn} locally!")
+    return dfn
+```
+
+```{python}
+# Function to create bivariate chropleth map
+# Adapted from: https://www.kaggle.com/code/yotkadata/bivariate-choropleth-map-using-plotly
+"""
+Function to set default variables
+"""
+def conf_defaults():
+    # Define some variables for later use
+    conf = {
+        "plot_title": "Bivariate choropleth map using Ploty",  # Title text
+        "plot_title_size": 20,  # Font size of the title
+        "width": 1000,  # Width of the final map container
+        "ratio": 0.8,  # Ratio of height to width
+        "center_lat": 0,  # Latitude of the center of the map
+        "center_lon": 0,  # Longitude of the center of the map
+        "map_zoom": 3,  # Zoom factor of the map
+        "hover_x_label": "Label x variable",  # Label to appear on hover
+        "hover_y_label": "Label y variable",  # Label to appear on hover
+        "borders_width": 0.5,  # Width of the geographic entity borders
+        "borders_color": "#f8f8f8",  # Color of the geographic entity borders
+        # Define settings for the legend
+        "top": 1,  # Vertical position of the top right corner (0: bottom, 1: top)
+        "right": 1,  # Horizontal position of the top right corner (0: left, 1: right)
+        "box_w": 0.04,  # Width of each rectangle
+        "box_h": 0.04,  # Height of each rectangle
+        "line_color": "#f8f8f8",  # Color of the rectagles' borders
+        "line_width": 0,  # Width of the rectagles' borders
+        "legend_x_label": "Higher x value",  # x variable label for the legend
+        "legend_y_label": "Higher y value",  # y variable label for the legend
+        "legend_font_size": 9,  # Legend font size
+        "legend_font_color": "#333",  # Legend font color
+    }
+    # Calculate height
+    conf["height"] = conf["width"] * conf["ratio"]
+
+    return conf
+
+
+"""
+Function to recalculate values in case width is changed
+"""
+
+
+def recalc_vars(new_width, variables, conf=conf_defaults()):
+    # Calculate the factor of the changed width
+    factor = new_width / 1000
+
+    # Apply factor to all variables that have been passed to the function
+    for var in variables:
+        if var == "map_zoom":
+            # Calculate the zoom factor
+            # Mapbox zoom is based on a log scale. map_zoom needs to be set
+            # to value ideal for our map at 1000px.
+            # So factor = 2 ^ (zoom - map_zoom) and zoom = log(factor) / log(2) + map_zoom
+            conf[var] = math.log(factor) / math.log(2) + conf[var]
+        else:
+            conf[var] = conf[var] * factor
+
+    return conf
+
+
+"""
+Function that assigns a value (x) to one of three bins (0, 1, 2).
+The break points for the bins can be defined by break_1 and break_2.
+"""
+
+
+def set_interval_value(x, break_1, break_2):
+    if x <= break_1:
+        return 0
+    elif break_1 < x <= break_2:
+        return 1
+    else:
+        return 2
+
+
+"""
+Function that adds a column 'biv_bins' to the dataframe containing the 
+position in the 9-color matrix for the bivariate colors
+    
+Arguments:
+    df: Dataframe
+    x: Name of the column containing values of the first variable
+    y: Name of the column containing values of the second variable
+
+"""
+
+
+def prepare_df(df, x="x", y="y"):
+    # Check if arguments match all requirements
+    if df[x].shape[0] != df[y].shape[0]:
+        raise ValueError(
+            "ERROR: The list of x and y coordinates must have the same length."
+        )
+
+    # Calculate break points at percentiles 33 and 66
+    x_breaks = np.percentile(df[x], [33, 66])
+    y_breaks = np.percentile(df[y], [33, 66])
+
+    # Assign values of both variables to one of three bins (0, 1, 2)
+    x_bins = [
+        set_interval_value(value_x, x_breaks[0], x_breaks[1]) for value_x in df[x]
+    ]
+    y_bins = [
+        set_interval_value(value_y, y_breaks[0], y_breaks[1]) for value_y in df[y]
+    ]
+
+    # Calculate the position of each x/y value pair in the 9-color matrix of bivariate colors
+    df["biv_bins"] = [
+        int(value_x + 3 * value_y) for value_x, value_y in zip(x_bins, y_bins)
+    ]
+
+    return df
+
+
+"""
+Function to create a color square containig the 9 colors to be used as a legend
+"""
+
+
+def create_legend(fig, colors, conf=conf_defaults()):
+    # Reverse the order of colors
+    legend_colors = colors[:]
+    legend_colors.reverse()
+
+    # Calculate coordinates for all nine rectangles
+    coord = []
+
+    # Adapt height to ratio to get squares
+    width = conf["box_w"]
+    height = conf["box_h"] / conf["ratio"]
+
+    # Start looping through rows and columns to calculate corners the squares
+    for row in range(1, 4):
+        for col in range(1, 4):
+            coord.append(
+                {
+                    "x0": round(conf["right"] - (col - 1) * width, 4),
+                    "y0": round(conf["top"] - (row - 1) * height, 4),
+                    "x1": round(conf["right"] - col * width, 4),
+                    "y1": round(conf["top"] - row * height, 4),
+                }
+            )
+
+    # Create shapes (rectangles)
+    for i, value in enumerate(coord):
+        # Add rectangle
+        fig.add_shape(
+            go.layout.Shape(
+                type="rect",
+                fillcolor=legend_colors[i],
+                line=dict(
+                    color=conf["line_color"],
+                    width=conf["line_width"],
+                ),
+                xref="paper",
+                yref="paper",
+                xanchor="right",
+                yanchor="top",
+                x0=coord[i]["x0"],
+                y0=coord[i]["y0"],
+                x1=coord[i]["x1"],
+                y1=coord[i]["y1"],
+            )
+        )
+
+        # Add text for first variable
+        fig.add_annotation(
+            xref="paper",
+            yref="paper",
+            xanchor="left",
+            yanchor="top",
+            x=coord[8]["x1"],
+            y=coord[8]["y1"],
+            showarrow=False,
+            text=conf["legend_x_label"] + " 🠒",
+            font=dict(
+                color=conf["legend_font_color"],
+                size=conf["legend_font_size"],
+            ),
+            borderpad=0,
+        )
+
+        # Add text for second variable
+        fig.add_annotation(
+            xref="paper",
+            yref="paper",
+            xanchor="right",
+            yanchor="bottom",
+            x=coord[8]["x1"],
+            y=coord[8]["y1"],
+            showarrow=False,
+            text=conf["legend_y_label"] + " 🠒",
+            font=dict(
+                color=conf["legend_font_color"],
+                size=conf["legend_font_size"],
+            ),
+            textangle=270,
+            borderpad=0,
+        )
+
+    return fig
+
+
+"""
+Function to create the map
+
+Arguments:
+    df: The dataframe that contains all the necessary columns
+    colors: List of 9 blended colors
+    x: Name of the column that contains values of first variable (defaults to 'x')
+    y: Name of the column that contains values of second variable (defaults to 'y')
+    ids: Name of the column that contains ids that connect the data to the GeoJSON (defaults to 'id')
+    name: Name of the column conatining the geographic entity to be displayed as a description (defaults to 'name')
+"""
+
+
+def create_bivariate_map(
+    df, colors, geojson, x="x", y="y", ids="id", name="name", conf=conf_defaults()
+):
+    if len(colors) != 9:
+        raise ValueError(
+            "ERROR: The list of bivariate colors must have a length eaqual to 9."
+        )
+
+    # Recalculate values if width differs from default
+    if not conf["width"] == 1000:
+        conf = recalc_vars(
+            conf["width"],
+            ["height", "plot_title_size", "legend_font_size", "map_zoom"],
+            conf,
+        )
+
+    # Prepare the dataframe with the necessary information for our bivariate map
+    df_plot = prepare_df(df, x, y)
+
+    # Create the figure
+    fig = go.Figure(
+        go.Choroplethmapbox(
+            geojson=geojson,
+            locations=df_plot[ids],
+            z=df_plot["biv_bins"],
+            marker_line_width=0.5,
+            colorscale=[
+                [0 / 8, colors[0]],
+                [1 / 8, colors[1]],
+                [2 / 8, colors[2]],
+                [3 / 8, colors[3]],
+                [4 / 8, colors[4]],
+                [5 / 8, colors[5]],
+                [6 / 8, colors[6]],
+                [7 / 8, colors[7]],
+                [8 / 8, colors[8]],
+            ],
+            customdata=df_plot[
+                [name, ids, x, y]
+            ],  # Add data to be used in hovertemplate
+            hovertemplate="<br>".join(
+                [  # Data to be displayed on hover
+                    "<b>%{customdata[0]}</b> (ID: %{customdata[1]})",
+                    conf["hover_x_label"] + ": %{customdata[2]}",
+                    conf["hover_y_label"] + ": %{customdata[3]}",
+                    "<extra></extra>",  # Remove secondary information
+                ]
+            ),
+        )
+    )
+
+    # Add some more details
+    fig.update_layout(
+        title=dict(
+            text=conf["plot_title"],
+            font=dict(
+                size=conf["plot_title_size"],
+            ),
+        ),
+        mapbox_style="white-bg",
+        width=conf["width"],
+        height=conf["height"],
+        autosize=True,
+        mapbox=dict(
+            center=dict(
+                lat=conf["center_lat"], lon=conf["center_lon"]
+            ),  # Set map center
+            zoom=conf["map_zoom"],  # Set zoom
+        ),
+    )
+
+    fig.update_traces(
+        marker_line_width=conf[
+            "borders_width"
+        ],  # Width of the geographic entity borders
+        marker_line_color=conf[
+            "borders_color"
+        ],  # Color of the geographic entity borders
+        showscale=False,  # Hide the colorscale
+    )
+
+    # Add the legend
+    fig = create_legend(fig, colors, conf)
+
+    return fig
+
+
+# Define sets of 9 colors to be used
+# Order: bottom-left, bottom-center, bottom-right, center-left, center-center, center-right, top-left, top-center, top-right
+color_sets = {
+    "pink-blue": [
+        "#e8e8e8",
+        "#ace4e4",
+        "#5ac8c8",
+        "#dfb0d6",
+        "#a5add3",
+        "#5698b9",
+        "#be64ac",
+        "#8c62aa",
+        "#3b4994",
+    ],
+    "teal-red": [
+        "#e8e8e8",
+        "#e4acac",
+        "#c85a5a",
+        "#b0d5df",
+        "#ad9ea5",
+        "#985356",
+        "#64acbe",
+        "#627f8c",
+        "#574249",
+    ],
+    "blue-orange": [
+        "#fef1e4",
+        "#fab186",
+        "#f3742d",
+        "#97d0e7",
+        "#b0988c",
+        "#ab5f37",
+        "#18aee5",
+        "#407b8f",
+        "#5c473d",
+    ],
+}
+```
+
+```{python}
+# calculating VIF
+# This function is adjusted from: https://stackoverflow.com/a/51329496/4667568
+from statsmodels.stats.outliers_influence import variance_inflation_factor 
+from statsmodels.tools.tools import add_constant
+
+def drop_column_using_vif_(df, thresh=5):
+    '''
+    Calculates VIF each feature in a pandas dataframe, and repeatedly drop the columns with the highest VIF
+    A constant must be added to variance_inflation_factor or the results will be incorrect
+
+    :param df: the pandas dataframe containing only the predictor features, not the response variable
+    :param thresh: (default 5) the threshould VIF value. If the VIF of a variable is greater than thresh, it should be removed from the dataframe
+    :return: dataframe with multicollinear features removed
+    '''
+    while True:
+        # adding a constatnt item to the data. add_constant is a function from statsmodels (see the import above)
+        df_with_const = add_constant(df)
+
+        vif_df = pd.Series([variance_inflation_factor(df_with_const.values, i) 
+               for i in range(df_with_const.shape[1])], name= "VIF",
+              index=df_with_const.columns).to_frame()
+
+        # drop the const
+        vif_df = vif_df.drop('const')
+        
+        # if the largest VIF is above the thresh, remove a variable with the largest VIF
+        # If there are multiple variabels with VIF>thresh, only one of them is removed. This is because we want to keep as many variables as possible
+        if vif_df.VIF.max() > thresh:
+            # If there are multiple variables with the maximum VIF, choose the first one
+            index_to_drop = vif_df.index[vif_df.VIF == vif_df.VIF.max()].tolist()[0]
+            print('Dropping: {}'.format(index_to_drop))
+            df = df.drop(columns = index_to_drop)
+        else:
+            # No VIF is above threshold. Exit the loop
+            break
+
+    return df
+```
+
+```{python}
+# Define paths for download
+ddir = os.path.join("data", "geo")  # destination directory
+spath = "https://github.com/jreades/i2p/blob/master/data/src/"  # source path
+spath_db = "https://www.dropbox.com/scl/fi/"  # source path for dropbox
+host = "http://orca.casa.ucl.ac.uk"
+path = "~jreades/data"
+```
+
+```{python}
+#| output: false
+
+# Read in airbnb, crime, and lsoa stats files. https://www.dropbox.com/home/casa/casa_fsds_cheers.
+# Some files have been cleaned, cropped, turned into gdf and hosted on dropbox to save time later on. See cleandata.ipynb in the Github repo for more details on how these files were created.
+# # [PATIENCE] Takes about 4 minutes to download and read in the data
+
+# Crime data filtered for September 2023, within Greater London
+crime = gpd.read_file(cache_data(spath_db + "ewc9skqcfr930whzcjadd/crime.gpkg?rlkey=xjve2mmmmt5h3allsa2zpabya&dl=1",ddir) , driver="gpkg", low_memory=False)
+
+# Airbnb listing data scraped on September 2023, filtered within Greater London
+listings = gpd.read_parquet(cache_data(f"{host}/{path}/2023-09-06-listings.geoparquet", ddir))
+listings = listings.to_crs(epsg=27700)
+
+# LSOA (London) data concatenated from multiple datasets from London Datastore,
+lsoa_stat = pd.read_csv(cache_data(spath_db + "8zc0g09rlf1yhj6j7yn6n/lsoa_full.csv?rlkey=yopr4hv017rr3iv4e2zus0ifz&dl=1",ddir), low_memory=False)
+```
+
+```{python}
+# Airbnb listing data scraped on September 2023, filtered within Greater London
+listings = gpd.read_parquet(cache_data(f"{host}/{path}/2023-09-06-listings.geoparquet", ddir))
+listings = listings.to_crs(epsg=27700)
+```
+
+```{python}
+#| output: false
+
+# Read in shapefiles (2 mins)
+water = gpd.read_file(cache_data(spath + "Water.gpkg?raw=true", ddir))
+green = gpd.read_file(cache_data(spath + "Greenspace.gpkg?raw=true", ddir))
+boros = gpd.read_file(cache_data(spath + "Boroughs.gpkg?raw=true", ddir))
+lsoa = gpd.read_file(
+    cache_data(
+        spath_db
+        + "u367zlorie8vuluugy2fr/lsoa_london.gpkg?rlkey=rc7rdnlfdmzfgy5q7ujz9pnwj&dl=1",
+        ddir,
+    )
+)
+```
+
+```{python}
+#| output: false
+
+# Check that all geo dataframes that they are in EPSG:27700
+crs = []
+for n in [water,green,boros,lsoa,crime,listings]:
+    crs.append(n.crs)
+print(f'Geo dataframes are in {set(crs)}')
+```
+
+# Response to Questions
+
+## 1. Who collected the data?
+
+Inside Airbnb was founded by Murray Cox who conceived the project, and keeps updating and analyzing Airbnb data (*About Inside Airbnb*).
+
+## 2. Why did they collect it?
+
+Murray Cox and his partners aim to make Airbnb's data more transparent and accessible to the public. In addition to making visual dashboards of different cities, they also wrote many reports based on these data. For example, they criticized Airbnb’s New York data as misleading (Cox and Slee, 2016). This is meant to benefit others in different ways:
+
+- For consumers, they can understand market trends more easily, which help them make more informed decisions and choose accommodation that fits their needs and budget;
+- For landlords, transparency of information will promote fair competition, and maintain the stability of short-term rental market prices;
+- For academics, they can use these data to explore how Airbnb relates to many factors in urban development; For the government, they can understand the current situation of the short-term rental market and try to control the phenomenon that is not conducive to the stable development of the city by establishing more supervision regulation.
+
+## 3. How was the data collected?
+
+Inside Airbnb uses web scraping scripts to extract publicly available information from Airbnb's website on a quarterly basis. These scripts navigate the Airbnb site, accessing various pages to retrieve data such as listing titles, descriptions, hosts, pricing, and more. The collected data is then verified, cleaned, and made available on the Inside Airbnb website for users to explore online or download for analysis. In addition to providing a snapshot, Inside Airbnb conducts in-depth analyses using this raw data to derive more insightful information for users. For instance, the platform employs a proprietary "San Francisco Model" to estimate the frequency with which an Airbnb listing is rented out and to approximate a listing's income.
+
+## 4. How does the method of collection impact the completeness and/or accuracy of its representation of the process it seeks to study, and what wider issues does this raise?
+
+There are several potential issues with this method of data collection that may challenge the validity of any research work done based on it:
+
+1.  Pricing and availability among others are extremely dynamic attributes set by hosts that cannot be captured accurately with web-scraping, which only reflects a snapshot of the website at one specific moment in time. Data capture can only capture real-time AirBnb data, and long-term comparative analysis requires data collection in advance and at higher frequencies
+2.  Data quality susceptible to changes in the structure of the website. Web scraping also only accesses publicly available listings.
+3.  Data quality depends on user input and do not guarantee accuracy (e.g. bogus listings)
+4.  Has ethical and legal implications which will be discussed in the next section
+
+## 5. What ethical considerations does the use of this data raise?
+
+The ethos of InsideAirbnb raises three ethical consideration:
+
+- First, Airbnb is a profitable company, making their data public without interfering with normal operations makes it easier to regulate them. But as landlords and renters, they have the right to request that their personal information not be made public elsewhere. However, it is not possible to ask everyone’s consent when the data is crawled. Therefore, using this data may be needed to handle sensitive personal information. For example, this could have implications for home privacy and home security.
+- Second, as the data is simply extracted and shown, users can only see the surface and cannot understand the context and methodology, unless they inquire further. It may cause misuse of data to public opinion (D’Ignazio and Klein, 2020). For example, the rental activities of a particular group may be negatively analyzed, which will reinforce the stereotype of this group and then trigger discrimination and antagonism mood of society.
+- Third, data settings are always influenced by power (D’Ignazio and Klein, 2020). Airbnb often leaves out reviews that aren’t friendly to properties and focuses on those that are profitable, such as setting its recommendation algorithm to favor partners. Therefore, users need to be fair when using such data.
+
+--------------------------------------------
+
+## 6. With reference to the data (*i.e.* using numbers, figures, maps, and descriptive statistics), what does an analysis of Listing types suggest about the nature of Airbnb lets in London?
+
+#### Background and research question
+Airbnb provides indispensable accommodation for the development of tourism. As a short-term rental platform, the mobility of tenants is one of its major characteristics. Mobility is a factor in crime (Mburu and Helbich, 2016), so recently there has been increasing concern about whether Airbnb, which brings high mobility to the local community, could be linked to an increase or decrease in crime. For example, Xu, Pennington-Gray and Kim (2019) studied the relationship between Airbnb density and crime in Florida and found that certain types of listings do have a significant impact on crime. Therefore, we try to explore whether Airbnb in London could also have an impact on crime based on Lower Layer Super Output Areas (LSOAs) level. The reason why we choose LSOA level as this allows for a more detailed examination of localized patterns and variations within a borough. Different neighborhoods within a borough can exhibit distinct characteristics that might be overlooked in a broader borough-level analysis as crime rates and housing patterns can vary significantly from one neighborhood to another. 
+
+Finally, our research question is: Does the type of Airbnb listing have an impact on crime in the neighbourhood? 
+
+#### Data source
+The Airbnb dataset is from the September 2023 updated version provided by Inside Airbnb. The crime dataset is from data.police.uk and has the same time dimension as Airbnb’s. The spatial partitioning dimension in this study is LSOA and is from the Office of National Statistics website. 
+
+#### Defining the data
+In order to examine the nature of Airbnb listing and crime relationship, we want to first establish the parameters to focus on a subset of the datasets:
+
+As Xu, Pennington-Gray, and Kim (2019) mentioned different types of listings have different impacts, we refer to their classification standards to divide Airbnb housing into private rooms and entire homes, which will be treated as independent variables. Each variable is defined as follows (*Data Dictionary*, nd):  
+- _Entire home:_ Tenants can enjoy an entire whole listing.  
+- _Private room:_ The tenant has a private bedroom but may need to share some space with others such as the kitchen.  
+
+When preprocessing Airbnb listings data, we excluded hotel rooms (listings by actual hotesl and hostels) since they are not the subject of this research and are also few in numbers. We also exclude Shared rooms due to thier limited number in London. It is worth mentioning that we trim listing price outliers to control for potentially bogus listings. Figure 1a and 1b shows the listing price distrubtion of different room type, before and after our filtering respectively.
+
+```{python}
+# Transform price to float
+if listings.price.dtype == "O":
+    listings.price = (
+        listings.price.str.replace("$", "").str.replace(",", "").astype(float).round(2)
+    )
+# Trim outliers in terms of price based on interquartile range, because they are most likely they are not real listings
+q1 = listings.price.quantile(0.25)
+q3 = listings.price.quantile(0.75)
+iqr = q3 - q1
+listings1 = listings[(listings.price >= q1 - 1.5 * iqr) & (listings.price <= q3 + 1.5 * iqr)]
+```
+
+```{python}
+# Plot by room type
+room = listings.room_type.unique()
+palette = sns.color_palette()
+
+fig,(ax1,ax2) = plt.subplots(1,2,figsize=[20,5])
+boros.plot(edgecolor='red', facecolor='None',linewidth=0.3,ax=ax2)
+for color,r in zip(palette,room):
+    ax1.hist(listings1[listings1['room_type']==r].price, bins=80, alpha=1, label=r,color=color)
+    listings1[listings1['room_type']==r].plot(column='room_type', markersize=.5, alpha=0.15,ax=ax2,color=color)
+ax1.legend(loc='upper right')
+ax2.axis('off')
+fig.suptitle('Figure 1a: Histogram of Airbnb listing price by room type - Sept 2023',x=0.5,y=-0.01)
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+# Clean listings data: outliers, and missing values, split into 2 types by property type
+# Omit Hotel rooms and Shared rooms
+listings2 = listings1[~listings1["room_type"].isin(["Hotel room","Shared room"])]
+```
+
+```{python}
+# Plot
+room = listings2.room_type.unique()
+
+fig,(ax1,ax2) = plt.subplots(1,2,figsize=[20,5])
+boros.plot(edgecolor='red', facecolor='None',linewidth=0.3,ax=ax2)
+for color,r in zip(palette,room):
+    ax1.hist(listings2[listings2['room_type']==r].price, bins=80, alpha=1, label=r,color=color)
+    listings2[listings2['room_type']==r].plot(column='room_type', markersize=.5, alpha=0.15,ax=ax2,color=color)
+ax1.legend(loc='upper right')
+ax2.axis('off')
+plt.tight_layout()
+fig.suptitle('Figure 1b: Histogram of Airbnb listing price (excl. Shared rooms and Hotel rooms) - Sept 2023',x=0.5,y=-0.01)
+plt.show()
+```
+
+```{python}
+# Write it back to original dataframe
+listings=listings2.copy()
+```
+
+As for crime data, as we want to make recommendations more specific to different types and levels of crime, we classify crime into the following types (Xu, Pennington-Gray and Kim, 2019; Flatley, 2016):
+- **Public order:** public order, drugs, possession of weapons, anti-social behaviour.
+- **Violent (involve force):** robbery, violence and sexual offences.
+- **Property (without force):** bicycle theft, burglary, criminal damage and arson, shoplifting, theft from the person, vehicle crime.
+
+These three types of crime will be treated as dependent variables. Figure 2 shows the distribution of crime density per LSOA by type. Note that they take on a skewed distribution (Poisson distribution) for being based on count. We will treat this accordingly in our analysis while also not trimming any outliers at this stage
+
+```{python}
+# Clean crime data: outliers, and missing values, split into 3 types
+crime_property = [
+    "Burglary",
+    "Criminal damage and arson",
+    "Theft from the person",
+    "Vehicle crime",
+    "Shoplifting",
+    "Bicycle theft",
+]
+crime_violent = ["Robbery", "Violence and sexual offences"]
+crime_publicorder = [
+    "Anti-social behaviour",
+    "Public order",
+    "Drugs",
+    "Possession of weapons",
+]
+# Omit rows with Other Crime and Other Theft
+crime = crime[~crime["Crime type"].isin(["Other theft", "Other crime"])]
+# Create a new column for crime type
+crime["Category"] = np.where(
+    crime["Crime type"].isin(crime_property),
+    "Property crime",
+    np.where(
+        crime["Crime type"].isin(crime_violent), "Violent crime", "Public Order crime"
+    ),
+)
+```
+
+```{python}
+# Plot them
+fig,ax = plt.subplots(1,3,figsize=[20,5])
+for idx,r in enumerate(crime.Category.unique()):
+    ax[idx].hist(crime[crime['Category']==r].groupby('LSOA code').count().Category, bins=100, alpha=0.5, label=r)
+    ax[idx].legend(loc='upper right')
+fig.suptitle('Figure 2a: Histogram of each crime category (LSOA level)',x=0.5,y=0.05)
+plt.show()
+
+# fig,ax = plt.subplots(1,1)
+# boros.plot(edgecolor='red', facecolor='None',linewidth=0.3,ax=ax)
+# crime.plot(column='Category', markersize=.5, alpha=0.15,legend=True,cmap='plasma',legend_kwds={'loc':(0.8,0)},ax=ax)
+# ax.axis('off')
+# fig.suptitle('Figure 2b: Distribution of crime incidents in Sept 2023',x=0.5,y=0.05)
+# plt.show()
+```
+
+#### Spatial relationship between airbnb listings and crime
+
+##### 1. Spatial distribution of each variable
+To start our spatial analysis of crime and listing patterns across LSOAs, distinct geographic concentrations emerge. Public order crimes are dispersed citywide, with notable pockets in Westminster and Hillingdon. Property crimes concentrate in central London, particularly in Westminster, while violent crimes exhibit a similar pattern, with Westminster and Hillingdon standing out. 
+On the other hand, private rooms and entire home exhibit citywide dispersal, with Westminster and Camden featuring prominently in private room concentrations, and the City of London emerging as a hub for entire home. One notaeworth observation is Entire homes are more concentrated in West/Central West London (Westminster, Mayfair), while Private rooms are more prominent in East London, and Central East (Islington, Camden).
+
+```{python}
+lsoa_merge = lsoa.copy()
+
+# Spatial crime and lsoa, summarise by count
+sjoin_lsoa = gpd.sjoin(crime, lsoa_merge)
+count_dict = (
+    sjoin_lsoa["LSOA21CD"].value_counts().to_dict()
+)  # count the values with value counts
+lsoa_merge["crime_count"] = lsoa_merge["LSOA21CD"].map(
+    count_dict
+)  # map it back to lsoa
+
+# Spatial join listings and lsoa, summarise by count
+sjoin_lsoa = gpd.sjoin(listings, lsoa_merge)
+count_dict = (
+    sjoin_lsoa["LSOA21CD"].value_counts().to_dict()
+)  # count the values with value counts
+lsoa_merge["listing_count"] = lsoa_merge["LSOA21CD"].map(
+    count_dict
+)  # map it back to lsoa
+```
+
+```{python}
+# Spatial join crime by categories and lsoa, summarise by count
+for s in ["Public Order crime", "Property crime", "Violent crime"]:
+    sjoin_lsoa = gpd.sjoin(crime[crime["Category"] == s], lsoa_merge)
+    count_dict = (
+        sjoin_lsoa["LSOA21CD"].value_counts().to_dict()
+    )  # count the values with value counts
+    lsoa_merge[s + "_count"] = lsoa_merge["LSOA21CD"].map(
+        count_dict
+    )  # map it back to lsoa_merge
+
+# Spatial join listings by room type and lsoa, summarise by count
+for r in ["Private room", "Entire home/apt"]:
+    sjoin_lsoa = gpd.sjoin(listings[listings["room_type"] == r], lsoa_merge)
+    count_dict = (
+        sjoin_lsoa["LSOA21CD"].value_counts().to_dict()
+    )  # count the values with value counts
+    lsoa_merge[r + "_count"] = lsoa_merge["LSOA21CD"].map(
+        count_dict
+    )  # map it back to lsoa_merge
+
+# Change NA to 0
+lsoa_merge = lsoa_merge.fillna(0)
+```
+
+```{python}
+# Plot crime / listings by type
+fig, axes = plt.subplots(3, 2, figsize=(15, 15))
+
+lsoa_merge.plot(
+    ax=axes[0, 0], column="Public Order crime_count", cmap="Reds", alpha=0.9
+)
+lsoa_merge.plot(ax=axes[1, 0], column="Property crime_count", cmap="Reds", alpha=0.9)
+lsoa_merge.plot(ax=axes[2, 0], column="Violent crime_count", cmap="Reds", alpha=0.9)
+
+axes[0, 0].set_title("Public Order crime by LSOA")
+axes[1, 0].set_title("Property crime by LSOA")
+axes[2, 0].set_title("Violent crime by LSOA")
+
+axes[0, 1].axis('off')
+# lsoa_merge.plot(ax=axes[0, 1], column="Shared room_count", cmap="Blues", alpha=0.9)
+lsoa_merge.plot(ax=axes[1, 1], column="Private room_count", cmap="Blues", alpha=0.9)
+lsoa_merge.plot(ax=axes[2, 1], column="Entire home/apt_count", cmap="Blues", alpha=0.9)
+
+# axes[0, 1].set_title("Shared room by LSOA")
+axes[1, 1].set_title("Private room by LSOA")
+axes[2, 1].set_title("Entire home/apt by LSOA")
+
+for ax in fig.get_axes():
+    ax.axis('off')
+    ax.axes.xaxis.set_visible(False)
+    ax.axes.yaxis.set_visible(False)
+    ax.set_xlim([501000, 563000])
+    ax.set_ylim([155000, 202000])
+
+plt.tight_layout()
+fig.suptitle('Figure 3: Density by LSOA',x=0.5,y=0)
+plt.show()
+```
+
+In order to have a sense of the relationship between different airbnb listing type and crime, we will use a superimposed heatmap (Kernel Density Estimate Plot). In A1-2-3 (Private room vs different crime types), there are overlaps in the north-west direction of central of London. In B1-2-3, entire home shows a spatial density that overlaps in the central of London area north of the Thames for each offence type. Overall, we 
+
+```{python}
+# KDE plot of listing types vs Crime categories
+# PATIENCE: It takes 3-4 minutes to run
+
+fig, axes = plt.subplots(3, 2, figsize=(15,15))
+
+# Base
+for ax in fig.get_axes():
+    ax.axis('off')
+    ax.axes.xaxis.set_visible(False)
+    ax.axes.yaxis.set_visible(False)
+    ax.set_xlim([501000, 563000])
+    ax.set_ylim([155000, 202000])
+    boros.plot(edgecolor="red", facecolor="None", linewidth=0.3, ax=ax)
+
+# KDE maps
+prop_cat = ["Private room", "Entire home/apt"]
+crime_cat = ["Public Order crime", "Property crime", "Violent crime"]
+s = ['A','B']
+# Create thresholds
+levels = [0.2, 0.4, 0.6, 0.8, 1]
+
+for i in range(3):
+    for j in range(2):
+        sns.kdeplot(
+            ax=axes[i, j],
+            x=crime[crime["Category"] == crime_cat[i]].geometry.x,
+            y=crime[crime["Category"] == crime_cat[i]].geometry.y,
+            levels=levels,
+            fill=True,
+            cmap="Reds",
+            alpha=0.5,
+        )
+        sns.kdeplot(
+            ax=axes[i, j],
+            x=listings[listings.room_type == prop_cat[j]].geometry.x,
+            y=listings[listings.room_type == prop_cat[j]].geometry.y,
+            levels=levels,
+            fill=True,
+            cmap="Blues",
+            alpha=0.5,
+        )
+        axes[i, j].set_title(f"{s[j]}{i+1} - {crime_cat[i]} vs. {prop_cat[j]}")
+        
+plt.tight_layout()
+fig.suptitle('Figure 4: Superimposed heatmaps (Red: Crime, Blue: Listings)', x=0.5,y=0)
+plt.show()
+```
+
+##### 2. Global Correlation and Spatial correlation
+
+From the correlation matrix, beyond the unsurprising correlation among the different crime categories, and among the room types, which are not of particular interest to us, we see that the correlation  between **entire home** and **property crime** is the strongest, with a correlation coefficient of 0.51. On the contrary, the correlation between private room and property crime is the weakest, with a correlation coefficient of 0.284. Overall, it is interesting to see that entire home listings seem to be more exposed to higher crime of all types at LSOA level. Although this does not give us an indication of casuality, it reinforces to untrained eyes a common belief among opponents of Airbnbs that not having live-in either engenders or is a magnet for crime.
+
+```{python}
+# Make the correlation matrix
+lsoa_merge_sub1 = lsoa_merge.iloc[:, -7:]
+lsoa_merge_sub1_comatrix = lsoa_merge_sub1.corr()
+# plot the correlation matrix plot
+fig, axes = plt.subplots(figsize=(20,5))
+sns.heatmap(
+    lsoa_merge_sub1_comatrix,
+    cmap="viridis",
+    annot=True,
+    fmt=".3f",
+    linewidths=0.1,
+    annot_kws={"size": 10},
+    ax=axes,
+)
+axes.tick_params(labelsize=9)
+
+fig.suptitle('Figure 5: Correlation Matrix - Listings type vs Crime category',x=0.5,y=-0.03)
+plt.tight_layout()
+plt.show()
+```
+
+When looking at the spatial distribution of all Airbnb listings and crimes, it is not surprising to see that the areas that are brown in colour, which means there are a large number of both Airbnb listings and crimes, are mostly concentrated in the central of London such as Westminster. Unexpectedly, an area in Hillington shows a high concentration, which has 198 criminal records and 55 listings. Similarly, the colour of an area of Kingston upon Thames also is brown, with 224 criminal records and 41 listings. These areas received little attention before.
+
+```{python}
+# Convert shapefil to geojson that the visualisation function requires
+lsoa_merge_wgs = lsoa_merge.to_crs(4326)
+lsoa_merge_wgs.to_file(os.path.join("data", "lsoa_merge.geojson"))
+geojson = json.load(open(os.path.join("data", "lsoa_merge.geojson"), "r"))
+# Iterate over JSON to add necessary 'id' property
+for i in range(len(geojson["features"])):
+    geojson["features"][i]["id"] = geojson["features"][i]["properties"]["LSOA21CD"]
+```
+
+```{python}
+# Load conf defaults and override some variables for our London map
+conf = conf_defaults()
+conf["plot_title"] = "Airbnb and Crime in London, Sep 2023"
+conf["hover_x_label"] = "Crime"  # Label to appear on hover
+conf["hover_y_label"] = "AirBnb listings"  # Label to appear on hover
+conf["width"] = 1000
+conf["center_lat"] = 51.508  # Latitude of the center of the map
+conf["center_lon"] = -0.1  # Longitude of the center of the map
+conf["map_zoom"] = 9  # Zoom factor of the map
+conf["borders_width"] = 0  # Width of the geographic entity borders
+
+# Define settings for the legend
+conf["top"] = 0.1  # Vertical position of the top right corner (0: bottom, 1: top)
+conf["right"] = 0.1  # Horizontal position of the top right corner (0: left, 1: right)
+conf["line_width"] = 0  # Width of the rectangles' borders
+conf["legend_x_label"] = "More Crime"  # x variable label for the legend
+conf["legend_y_label"] = "More Airbnb"  # y variable label for the legend
+
+# Plot
+fig = create_bivariate_map(
+    lsoa_merge,
+    color_sets["blue-orange"],
+    geojson,
+    x="crime_count",
+    y="listing_count",
+    ids="LSOA21CD",
+    name="LSOA21NM",
+    conf=conf,
+)
+fig.show()
+```
+
+<img src="https://www.dropbox.com/scl/fi/e8epq7uc943zvjz2es6si/newplot-1.png?rlkey=rlgydu69vjzuxnuvch8ptu2y1&dl=1" alt="Airbnb vs Crime" style="width:1000px;"/>
+
+*Figure 6:* Correlation Matrix - Listings type vs Crime category</figure>
+
+As the entire home and property crime show the strongest correlation, we pay separate attention to their correlation spatial distribution.  From this map, we can see that the situation is similar to the previous one, in which the problem of an area in Hillington and Kingston upon Thames respectively still exists.
+
+Overall, as the data shows on the map, the distribution of Airbnb listings does align with the distribution of crime in many areas. Similarly, we find that all of the independent variables we set are correlated with the dependent variables. However, correlation does not mean causation, so we would like to do a further regression analysis to determine whether different types of Airbnb listings actually have an impact on different types of crime.
+
+--------------------------------------------
+
+## 7. Linear regression analysis
+
+Since the causes of crime are complex, and previous studies have shown that some Airbnb listings type may only have a weak effect on crime (Van Holm and Monaghan, 2021), we attempted to add some controlled variables to improve the interpretability and accuracy of the overall linear regression model. The control variables which data are collected from the Office of national statistics are shown below:
+-   Population density: Usual resident (11) / Area (need to get)
+-   Bad+Very Bad Health (120+121) / Pop (11)
+-   deprived 2+ dimension (144+145+146) / Pop (11)
+-   Unemployed (72) / Pop (11)
+-   Young people (17+18+19) / Pop (11)
+
+These variables directly or indirectly provide a level of deprivation, which serve as a significant socioeconomic indicator linked to crime patterns (*Crimes recorded by neighbourhood income deprivation decile in London*, 2022). By understanding the degree of deprivation in different neighborhoods we can see potential correlations between economic hardship and crime rates. Higher levels of deprivation in specific areas may indicate increased vulnerability to certain types of crimes. This variable is instrumental in identifying and addressing underlying factors contributing to crime in specific locations.
+
+Mentioned again, the other three independent variables are different types of Airbnb listings, and the three dependent variables are different crime types.
+
+#### Preparing Regression Data
+
+```{python}
+# Select columns and calculate density for key variables
+lsoa_stat_sel = lsoa_stat.copy()
+lsoa_stat_sel['deprived_3+_dimension_density'] = (lsoa_stat['3 dimensions'] + lsoa_stat['4 dimensions'])/lsoa_stat['All Households']
+lsoa_stat_sel['unemployed_density'] = (lsoa_stat['Economically active: Unemployed'])/lsoa_stat['All usual residents aged 16 or over']
+lsoa_stat_sel['young_people_density'] = (lsoa_stat['Aged 15 '] + lsoa_stat['Aged 16 to 17'] + lsoa_stat['Aged 18 to 19'] + lsoa_stat['Aged 20 to 24'])/lsoa_stat['All usual residents']
+lsoa_stat_sel['qual_level_3+_density'] = (lsoa_stat['Level 3'] + lsoa_stat['Level 4+'] )/lsoa_stat['Usual residents aged 16+']
+lsoa_stat_sel['social_rent_density'] = (lsoa_stat['Other social rented'] + lsoa_stat['Rented from Local Authority'] )/lsoa_stat['All Households']
+```
+
+```{python}
+# Merge selected columns from lsoa_stat_sel to lsoa_merge by LSOA21CD
+lsoa_merge1 = lsoa_merge.merge(lsoa_stat_sel[['LSOA code',
+                                                  'deprived_3+_dimension_density',
+                                                  'unemployed_density',
+                                                  'young_people_density',
+                                                  'qual_level_3+_density',
+                                                  'social_rent_density',
+                                                  'All Households',
+                                                  'All usual residents aged 16 or over',
+                                                  'All usual residents']], 
+                               left_on = 'LSOA21CD',right_on='LSOA code', how='left').drop(columns=['LSOA code'])
+```
+
+```{python}
+# Add density for each column in lsoa_merge1 nased on All Households and All usual residents
+# Select columns and calculate density
+lsoa_merge1['crime_density'] = lsoa_merge1['crime_count']/lsoa_merge1['All usual residents']
+lsoa_merge1['listing_density'] = lsoa_merge1['listing_count']/lsoa_merge1['All Households']
+# lsoa_merge1['Shared room_density'] = lsoa_merge1['Shared room_count']/lsoa_merge1['All Households']
+lsoa_merge1['Private room_density'] = lsoa_merge1['Private room_count']/lsoa_merge1['All Households']
+lsoa_merge1['Entire home/apt_density'] = lsoa_merge1['Entire home/apt_count']/lsoa_merge1['All Households']
+lsoa_merge1['Public Order crime_density'] = lsoa_merge1['Public Order crime_count']/lsoa_merge1['All usual residents']
+lsoa_merge1['Property crime_density'] = lsoa_merge1['Property crime_count']/lsoa_merge1['All usual residents']
+lsoa_merge1['Violent crime_density'] = lsoa_merge1['Violent crime_count']/lsoa_merge1['All usual residents']
+lsoa_merge1['area'] = lsoa_merge1['geometry'].area
+lsoa_merge1['pop_density'] = lsoa_merge1['All usual residents']/lsoa_merge1['area']
+```
+
+```{python}
+regressiondata = lsoa_merge1.copy()
+# Keep ones needed for regression
+regressiondata = regressiondata.loc[:,[col for col in regressiondata.columns if 'density' in col]]
+```
+
+```{python}
+def normal_from_dist(series):  #define function name and required arguments (in this case a pandas series)
+    mu = series.mean()         #calculate the mean of our data
+    sd = series.std()          #calculate the standard deviation of our data
+    n  = len(series)           #count how many observations are in our data
+    s = np.random.normal(mu, sd, n)   #use the parameters of the data just calculated to generate n random numbers, drawn from a normal distributions 
+    return s                   #return this set of random numbers
+```
+
+```{python}
+test_cols_df = regressiondata.copy()
+
+fig, axes = plt.subplots(3,5, figsize=(20, 10))
+axflat = axes.flatten()
+for i, ax in enumerate(np.resize(axflat,axflat.size-2)):
+    sns.distplot(test_cols_df.iloc[:,i], ax=ax)
+    sns.kdeplot(normal_from_dist(test_cols_df.iloc[:,i]), color='r', fill=True, ax=ax)
+    ax.set_title(test_cols_df.columns[i])
+    ax.set_xlabel('')
+    ax.set_ylabel('')
+    ax.set_yticklabels('')
+    sns.despine()
+for ax in axflat[-2:]:
+    ax.axis('off')
+fig.suptitle('Figure 7a: Regression dependent and indenpendent variables (pre-transformation)',x=0.5,y=0)
+plt.tight_layout()
+plt.show()
+```
+
+Need log transformation for
+- Listing density
+- Crime density
+- Property crime density
+- Violent crime density
+- Public order crime density
+- Listing density
+- Social rent density
+- Private room density
+- Entire home/apt density
+- population density
+
+```{python}
+# Log of the variables social rent, shared room, private room, entire home/apt, pop_density, etc.
+cols = ['social_rent_density','Private room_density','Entire home/apt_density','pop_density','listing_density','crime_density','listing_density','Public Order crime_density','Property crime_density','Violent crime_density']
+for col in cols:
+    # remove rows (LSOAs) with no airbnbs
+    c = regressiondata[col].sort_values().unique()[1]
+    regressiondata[col+'_log'] = np.log(regressiondata[col]+c)
+# Drop original columns
+regressiondata.drop(cols,axis=1,inplace=True)
+```
+
+```{python}
+# histogram for the variables in regressiondata_std compared with normal distribution
+# test_cols_df = regressiondata.copy()
+
+# fig, axes = plt.subplots(7,2, figsize=(30, 30))
+# for i, ax in enumerate(axes.flatten()):
+#     sns.distplot(test_cols_df.iloc[:,i], ax=ax)
+#     sns.kdeplot(normal_from_dist(test_cols_df.iloc[:,i]), color='r', fill=True, ax=ax)
+#     ax.set_title(test_cols_df.columns[i])
+#     ax.set_xlabel('')
+#     ax.set_ylabel('')
+#     ax.set_yticklabels('')
+#     sns.despine()
+# plt.show()
+
+test_cols_df = regressiondata.copy()
+
+fig, axes = plt.subplots(3,5, figsize=(20, 10))
+axflat = axes.flatten()
+for i, ax in enumerate(np.resize(axflat,axflat.size-2)):
+    sns.distplot(test_cols_df.iloc[:,i], ax=ax)
+    sns.kdeplot(normal_from_dist(test_cols_df.iloc[:,i]), color='r', fill=True, ax=ax)
+    ax.set_title(test_cols_df.columns[i])
+    ax.set_xlabel('')
+    ax.set_ylabel('')
+    ax.set_yticklabels('')
+    sns.despine()
+for ax in axflat[-2:]:
+    ax.axis('off')
+fig.suptitle('Figure 7b: Regression dependent and indenpendent variables (post-transformation)',x=0.5,y=0)
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+# drop crime related columns to check for multicollinearity
+regressiondata_VIF = regressiondata.drop([col for col in regressiondata.columns if 'crime' in col],axis=1)
+# drop columns with high VIF
+regressiondata_VIF = drop_column_using_vif_(regressiondata_VIF)
+selected_cols = regressiondata_VIF.columns.tolist()
+```
+
+#### Regression Model
+
+```{python}
+models =[]
+results = []
+for i in ['crime_','Property crime_', 'Violent crime_', 'Public Order crime_']:
+    # OLS model
+    OLS = sm.OLS(endog=regressiondata[i+'density_log'], 
+                      exog=sm.add_constant(regressiondata[selected_cols]))
+    OLSmodel = OLS.fit()
+    print(OLSmodel.summary())
+    models.append(OLS)
+    results.append(OLSmodel)
+    print('='* 98)
+    print('\n')
+```
+
+After linear regression analysis, we come to the following conclusions:
+
+- For property crime, only the entire home has a positive impact on it. 
+- For violent crime, all listing types have a positive impact on it. 
+- For public order crime, all room types have a positive impact on it
+
+#### Residual Analysis to check for OLS assumptions
+
+```{python}
+# Residuals vs. Fitted plot
+fig,axes = plt.subplots(4,3,figsize=(20, 15))
+for i in range(4):
+    # Plot the residuals vs fitted values on ax1
+    axes[i,0].scatter(results[i].fittedvalues, results[i].resid, alpha = 0.5, s=10)
+    axes[i,0].set_xlabel(f'Fitted values')
+    axes[i,0].set_ylabel('Residual')
+    axes[i,0].set_title(f'Residual vs. Fitted Plot for {models[i].endog_names}')
+    axes[i,0].xaxis.label.set_visible(False)
+
+    # QQplot on ax2
+    sm.qqplot(results[i].resid, line='s', ax=axes[i,1])
+    axes[i,1].set_title(f'QQ Plot for {models[i].endog_names}')
+    axes[i,1].xaxis.label.set_visible(False)
+        
+    # Residual distribution on ax3
+    axes[i,2].hist(results[i].resid, bins=50)
+    axes[i,2].set_xlabel('Residual')
+    axes[i,2].set_ylabel('Frequency')
+    axes[i,2].set_title(f'Residual Distribution for {models[i].endog_names}')
+    axes[i,2].xaxis.label.set_visible(False)
+for j in range(3):
+    axes[3,j].xaxis.label.set_visible(True)
+    
+fig.suptitle('Figure 8: Residual Analysis to confirm OLS assumptions',x=0.5,y=0)
+plt.tight_layout()
+plt.show()
+```
+
+Comment
+
+#### Residual Moran's I to check if there is Spatial Lag within the Residuals (spatial autocorrelation unaccounted for in the model)
+
+```{python}
+# Local Moran's I for residual of OLSmodel
+
+# Create spatial weights matrix
+w = Queen.from_dataframe(lsoa)
+w.transform = 'r'
+
+residuals = results[0].resid
+moran = Moran(residuals, w)
+moran_loc = Moran_Local(residuals, w)
+lisa_cluster(moran_loc, lsoa, p=0.05, figsize = (9,9),legend_kwds={'loc': 'lower right'})
+plt.title(f'Residuals Moran\'s I - {models[0].endog_names}\nGlobal stat = {moran.I:.2f}')
+plt.tight_layout()
+plt.show()
+
+fig, axes = plt.subplots(1, 3, figsize=(18,6))
+ax = axes.flatten()
+for i in range(3):
+    residuals = results[i].resid
+    moran = Moran(residuals, w)
+    moran_loc = Moran_Local(residuals, w)
+    lisa_cluster(moran_loc, lsoa, p=0.05,ax=ax[i],legend_kwds={'loc': 'lower right'})
+    ax[i].title.set_text(f'Residuals Local Moran\'s I - {models[i+1].endog_names}\nGlobal stat = {moran.I:.2f}')
+
+fig.suptitle('Figure 9: Residual Morans I - By category',x=0.5,y=0)
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+# Spatial Error Model to deal with spatial autocorrelation
+
+X = regressiondata[selected_cols].to_numpy()
+y = regressiondata['crime_density_log'].to_numpy()
+
+# Create a Queen spatial weights matrix
+w = Queen.from_dataframe(lsoa)
+w.transform = 'r'
+
+mod1 = GM_Error_Het(
+    y=y,
+    x=X,
+    w=w,
+    name_y = 'crime_density_log',
+    name_x = regressiondata[selected_cols].columns.tolist()
+)
+print(mod1.summary)
+```
+
+```{python}
+Comment
+```
+
+---------
+
+#### Geographically Weighted Regression to visualize geo variation of the relationship between different airbnb types and crime_density
+
+```{python}
+# Prepare  dataset inputs
+g_y = regressiondata['crime_density_log'].values.reshape((-1,1))
+g_X = regressiondata[selected_cols].values
+lsoa_cen = lsoa.centroid.get_coordinates()
+u = lsoa_cen['x']
+v = lsoa_cen['y']
+g_coords = list(zip(u,v))
+
+g_X = (g_X - g_X.mean(axis=0)) / g_X.std(axis=0)
+g_y = (g_y - g_y.mean(axis=0)) / g_y.std(axis=0)
+```
+
+```{python}
+# Calibrate GWR model
+gwr_selector = Sel_BW(g_coords, g_y, g_X)
+# gwr_bw = gwr_selector.search(bw_min=500)
+# print(gwr_bw)
+gwr_bw = 573
+gwr_results = GWR(g_coords, g_y, g_X, gwr_bw).fit()
+```
+
+```{python}
+# Add Paramaters back to geo dataframe for mapping
+lsoa['gwr_intercept'] = gwr_results.params[:,0]
+for i in range(len(selected_cols)-1):
+    lsoa['gwr_'+selected_cols[i]] = gwr_results.params[:,i+1]
+# Filter Insignificant coefficients alpha 0.05
+gwr_filtered_t = gwr_results.filter_tvals(alpha = 0.05)
+```
+
+```{python}
+# Map them
+type = ['Entire home/apt','Private room']
+fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(15,10))
+for i in range(len(type)):
+    lsoa.plot(column=f'gwr_{type[i]}_density_log', cmap = 'coolwarm', linewidth=0.001, scheme = 'naturalbreaks', k=5, legend=True, legend_kwds={'bbox_to_anchor':(1.10, 0.96)},  ax=axes[i,0])
+    lsoa.plot(column=f'gwr_{type[i]}_density_log', cmap = 'coolwarm', linewidth=0.001, scheme = 'naturalbreaks', k=5, legend=False, legend_kwds={'bbox_to_anchor':(1.10, 0.96)},  ax=axes[i,1])
+    lsoa[gwr_filtered_t[:,1] == 0].plot(color='white', linewidth=0.001, edgecolor='white', ax=axes[i,1])
+    axes[i,0].axis("off")
+    axes[i,1].axis("off")
+    axes[i,0].set_title(f'({i+1}a) {type[i]} vs. Crime, all coeffs', fontsize=12)
+    axes[i,1].set_title(f'({i+1}b) {type[i]} vs. Crime, significant coeffs', fontsize=12)
+plt.tight_layout()
+fig.suptitle('Figure 10: Geographically weighted effect of airbnb listings on crime',x=0.5,y=0)
+plt.show()
+```
+
+Based on all of our analysis, we would like to make the following recommendations to Airbnb users, the Airbnb company and the government to minimize Airbnb's impact on crime.
+
+For Governments:
+- To enhance the safety of short-term rentals, governments should consider implementing a Registration/Licensing Scheme akin to those for hotels. This initiative could include regulations like owner-occupied residences, a cap on the number of renters, and neighbour notifications (Vande Bunte, 2014).
+- Collaborating closely with Airbnb is also crucial to establish stringent criteria for vetting listings and mitigate criminal activities effectively (Wachsmuth and Weisler, 2018). Also, the government can ask Airbnb to share data with local police departments to help them identify areas with high Airbnb density.
+- To provide a threshold in areas with particularly high crime rates and legislate to limit the number of Airbnb listings.
+- To add more police presence in places where Airbnb is especially dense.
+
+For Airbnb:
+- Enhancing background checks for hosts and tenants will contribute to mitigating community crime rates (Barron, Kung, and Proserpio, 2018).
+- To ensure responsive security measures are in place, particularly after receiving security reports about listings, including the potential removal of listings after multiple reports (Grind and Shifflett, 2019). It will further add to the platform's commitment to user safety.
+- To pay for additional security cameras in areas with high Airbnb density such as listings in the City of London and Hillington.
+- Permanently block the use of Airbnb for users who do not comply with Airbnb's guidelines or who are reported for illegal actions such as committing a crime against a neighbour/in the property.
+- Set up a special channel for tenants to easily complain to the landlord or shared tenants.
+
+For Users:
+
+Users are encouraged to comply with local laws and regulations governing short-term rentals.  
+- Users should be aware of and adhere to regulations, such as the New York State Multiple Dwelling Law affecting rentals (Schneiderman, 2014), which are vital for fostering a secure environment.  
+- The implementation of education and outreach programs, in line with the recommendations of Felson et al. (2019), can significantly contribute to crime reduction and heightened public awareness.
+
+## References
+
+Barron, K., Kung, E. and Proserpio, D. (2018) Analysis of the impact of Airbnb rentals on community crime rates.
+
+Cox, M. and Slee, T. (2016) How Airbnb’s data hid the facts in New York City. Inside Airbnb, [Online] Available at: http://insideairbnb.com/research/how-airbnb-hid-the-facts-in-nyc [Accessed 14 December 2023].
+
+Crime and income deprivation, no date. [Online] Available at: [https://trustforlondon.org.uk/data/crime-and-income-deprivation/#:~:text=Overall%2C 52%25 more crimes were,the least income-deprived 10%25](https://trustforlondon.org.uk/data/crime-and-income-deprivation/#:~:text=Overall%2C%2052%25%20more%20crimes%20were,the%20least%20income%2Ddeprived%2010%25) [Accessed 14 December 2023].
+
+D’Ignazio, C. and Klein, L.F. (2020) ‘The Numbers Don’t Speak for Themselves’, in Data Feminism. [Online] United States: MIT Libraries Experimental Collections Fund.
+
+Flatley, J. (2016) Focus on property crime: year ending March 2016. [Online] Available at: https://www.ons.gov.uk/peoplepopulationandcommunity/crimeandjustice/bulletins/focusonpropertycrime/yearendingmarch2016 [Accessed 14 December 2023].
+
+Felson, M., Belanger, M., Bichler, G., Bruzdzinski, C., Campbell, G., Fried, C., et al. (2019) Study on how education and outreach can reduce crime and increase public awareness.
+
+Grind, K. and Shifflett, S. (2019) Shooting, sex crime and theft: Airbnb takes halting steps to protect its users. Wall Street Journal, 26 December.
+
+Hua, N., Li, B. and Zhang, T. (2020) ‘Crime research in hospitality and tourism’. International Journal of Contemporary Hospitality Management, 32(3), pp. 1299–1323. doi: [10.1108/IJCHM-09-2019-0750](https://doi.org/10.1108/IJCHM-09-2019-0750).
+
+Inside Airbnb Data Dictionary (no date). https://docs.google.com/spreadsheets/d/1iWCNJcSutYqpULSQHlNyGInUvHg2BoUGoNRIGa6Szc4/edit?usp=sharing.
+
+Ke, L., O'Brien, D.T. and Heydari, B. (2021) ‘Airbnb and neighborhood crime: The incursion of tourists or the erosion of local social dynamics?’ PLoS ONE, 16(7), pp. e0253315–e0253315. doi: [10.1371/journal.pone.0253315](https://doi.org/10.1371/journal.pone.0253315).
+
+Mehmed, N.R., no date. ‘Airbnb and the Sharing Economy: Policy Implications for Local Governments’.
+
+Schneiderman, E. (2014) Airbnb in the city. New York State Office of the Attorney General. [Online] Available at: http://www.ag.ny.gov/pdfs/Airbnbreport.pdf [Accessed 14 December 2023].
+
+Vakhitova, Z.I., Mawby, R.I., Helps, N. and Alston-Knox, C.L. (2023) ‘Tourism and Crime: An Exploratory Study of Burglary From Tourist Accommodation From the Criminal Opportunity Perspective’. Crime & Delinquency, 69(11), pp. 2164–2193. doi: [10.1177/00111287221106962](https://doi.org/10.1177/00111287221106962).
+
+Vande Bunte, M. (2014) Airbnb verdict in Grand Rapids: 1 room and 2 adults, with a possible exception. The Grand Rapids Press. [Online] Available at: http://www.mlive.com/news/grandrapids/index.ssf/2014/08/airbnb_verdict_in_grand_rapids.html [Accessed Date].
+
+Van Holm, E.J. and Monaghan, J. (2021) ‘The relationship of Airbnb to neighborhood calls for service in three cities’. Cities, 116, p. 103241. doi: [10.1016/j.cities.2021.103241](https://doi.org/10.1016/j.cities.2021.103241).
+
+Xu, Y.-H., Kim, J. and Pennington-Gray, L., no date. ‘Explore the Spatial Relationship between Airbnb Rental and Crime’.
