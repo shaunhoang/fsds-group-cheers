@@ -904,12 +904,12 @@ Overall, as the data shows on the map, the distribution of Airbnb listings does 
 
 ## 7. Linear regression analysis
 
-Since the causes of crime are complex, and previous studies have shown that some Airbnb listings type may only have a weak effect on crime (Van Holm and Monaghan, 2021), we attempted to add some controlled variables to improve the interpretability and accuracy of the overall linear regression model. We collected data from the Office of national statistics and proposed the following variables: unemployed density, young people (15-24 ages) density, the density of deprivation index which equals or above 3, the density of education level which equals or above Level 3, the density of tenants (excludes from Airbnb but includes from the council).
+Since the causes of crime are complex, and previous studies have shown that some Airbnb listings type may only have a weak effect on crime (Van Holm and Monaghan, 2021), we attempted to add some controlled variables to improve the interpretability and accuracy of the overall linear regression model. We collected data from the Office of national statistics and proposed the following variables: unemployed density, young people (15-24 ages) density, the density of deprivation index which equals or above 3, the density of education level which equals or above Level 3, the density of tenants (excludes from Airbnb but includes from the council). 
  density
 
-These variables directly or indirectly provide a level of deprivation, which serve as a significant socioeconomic indicator linked to crime patterns (*Crimes recorded by neighbourhood income deprivation decile in London*, 2022). By understanding the degree of deprivation in different neighborhoods we can see potential correlations between economic hardship and crime rates. Higher levels of deprivation in specific areas may indicate increased vulnerability to certain types of crimes. This variable is instrumental in identifying and addressing underlying factors contributing to crime in specific locations.
+These variables directly or indirectly provide a level of deprivation, which serve as a significant socioeconomic indicator linked to crime patterns (*Crimes recorded by neighbourhood income deprivation decile in London*, 2022). By understanding the degree of deprivation in different neighborhoods we can see potential correlations between economic hardship and crime rates. Higher levels of deprivation in specific areas may indicate increased vulnerability to certain types of crimes. This variable is instrumental in identifying and addressing underlying factors contributing to crime in locations.
 
-Mentioned again, the other three independent variables are different types of Airbnb listings, and the three dependent variables are different crime types.
+Meanwhile, the shared room, private room, entire home, which are independent variables, and dependent variables property crime, public order crime, violent crime are all converted into density forms.me types.
 
 #### Preparing Regression Data
 
