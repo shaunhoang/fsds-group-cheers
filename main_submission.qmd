@@ -26,10 +26,10 @@ format:
     monofont: JetBrainsMono-Regular
     papersize: a4
     geometry:
-      - top=25mm
-      - left=40mm
-      - right=30mm
-      - bottom=25mm
+      - top=20mm
+      - left=25mm
+      - right=25mm
+      - bottom=20mm
       - heightrounded
     toc: false
     number-sections: false
@@ -50,26 +50,30 @@ jupyter:
 
 ## Declaration of Authorship {.unnumbered .unlisted}
 
-We, CHEER UP Group, confirm that the work presented in this assessment is our own. Where information has been derived from other sources, we confirm that this has been indicated in the work. Where a Large Language Model such as ChatGPT has been used we confirm that we have made its contribution to the final submission clear.
+We, CHEER UP Group, confirm that the work presented in this assessment is our own. Where information has been derived from other sources, we confirm that this has been indicated in the work. Where a Large Language Model such as ChatGPT has been used, we ensure that we have made its contribution to the final submission clear.
 
-Date:
+Date: 18 Dec 2023
 
-Student Numbers:
+Student Numbers: 23221457, 22172388, 23092079, 23252871, 23066570
 
 ## Brief Group Reflection
 
 | What Went Well | What Was Challenging |
 |----------------|----------------------|
-| A                  | B                    |
-| C              | D                    |
+| Insight from data analysis: Identifying that entire homes positively impact property crime provides valuable insight to inform targeted solutions.| Data Limitations: The difficulty in detailing whether crimes occurred within specific Airbnb listings due to data limitations poses a challenge in formulating precise recommendations.                    |
+| Policy recommendations: We provided comprehensive recommendations for the government, Airbnb and users, covering various aspects, including background checks, regulations, security measures, and public awareness, demonstrating a holistic approach to addressing the challenges.           | Potential Causation: Why certain areas exhibited higher crime levels, e.g. a higher density of Airbnb rentals, specifically entire homes/apartments, may attract more tourists. This, in turn, could render these areas more susceptible to criminal activities, as tourists are often perceived as attractive targets for theft or scams.|
+|Group dynamics: We distributed the tasks among the group but regrouped regularly to discuss our findings and the next steps. | Difficult in collaboration and prioritisation leading up to exam week.|
 
 ## Priorities for Feedback
-
-Are there any areas on which you would appreciate more detailed feedback if we're able to offer it?
+- Correctness of our quantitative methods
 
 {{< pagebreak >}}
 
 ```{python}
+# warnings.simplefilter(action="ignore", category=FutureWarning)
+import warnings
+warnings.filterwarnings("ignore")
+import math
 import pandas as pd
 import geopandas as gpd
 import numpy as np
@@ -85,16 +89,12 @@ from mgwr.gwr import GWR, MGWR
 from mgwr.sel_bw import Sel_BW
 import json
 import os
-import warnings
 from urllib.parse import urlparse
 import statsmodels.api as sm
 import pysal
 from esda.moran import Moran
 from esda.moran import Moran_Local
 from splot.esda import lisa_cluster
-
-# warnings.simplefilter(action="ignore", category=FutureWarning)
-warnings.filterwarnings("ignore")
 ```
 
 ```{python}
@@ -536,12 +536,6 @@ lsoa_stat = pd.read_csv(cache_data(spath_db + "8zc0g09rlf1yhj6j7yn6n/lsoa_full.c
 ```
 
 ```{python}
-# Airbnb listing data scraped on September 2023, filtered within Greater London
-listings = gpd.read_parquet(cache_data(f"{host}/{path}/2023-09-06-listings.geoparquet", ddir))
-listings = listings.to_crs(epsg=27700)
-```
-
-```{python}
 #| output: false
 
 # Read in shapefiles (2 mins)
@@ -571,57 +565,54 @@ print(f'Geo dataframes are in {set(crs)}')
 
 ## 1. Who collected the data?
 
-Inside Airbnb was founded by Murray Cox who conceived the project, and keeps updating and analyzing Airbnb data (*About Inside Airbnb*).
+Inside Airbnb was founded by Murray Cox, who conceived the project and keeps updating and analysing Airbnb data (*About Inside Airbnb*).
 
 ## 2. Why did they collect it?
 
-Murray Cox and his partners aim to make Airbnb's data more transparent and accessible to the public. In addition to making visual dashboards of different cities, they also wrote many reports based on these data. For example, they criticized Airbnb’s New York data as misleading (Cox and Slee, 2016). This is meant to benefit others in different ways:
+Murray Cox and Co. aim to make Airbnb's data more transparent and accessible to the public. In addition to creating visual dashboards of different cities, they wrote many reports based on these data. For example, they criticised Airbnb’s New York data as misleading (Cox and Slee, 2016). This is meant to benefit others in different ways:
 
-- For consumers, they can understand market trends more easily, which help them make more informed decisions and choose accommodation that fits their needs and budget;
-- For landlords, transparency of information will promote fair competition, and maintain the stability of short-term rental market prices;
-- For academics, they can use these data to explore how Airbnb relates to many factors in urban development; For the government, they can understand the current situation of the short-term rental market and try to control the phenomenon that is not conducive to the stable development of the city by establishing more supervision regulation.
+- Consumers can understand market trends more efficiently, which help them make more informed decisions and choose accommodation that fits their needs and budget;
+- Landlords can have transparency of information, and that can promote fair competition and maintain the stability of short-term rental market prices;
+- Academics can use these data to explore how Airbnb relates to many factors in urban development.
+- Governments can understand the current situation of the short-term rental market and try to control the phenomenon that could be more conducive to the stable development of the city by establishing more supervision regulations.
 
 ## 3. How was the data collected?
 
-Inside Airbnb uses web scraping scripts to extract publicly available information from Airbnb's website on a quarterly basis. These scripts navigate the Airbnb site, accessing various pages to retrieve data such as listing titles, descriptions, hosts, pricing, and more. The collected data is then verified, cleaned, and made available on the Inside Airbnb website for users to explore online or download for analysis. In addition to providing a snapshot, Inside Airbnb conducts in-depth analyses using this raw data to derive more insightful information for users. For instance, the platform employs a proprietary "San Francisco Model" to estimate the frequency with which an Airbnb listing is rented out and to approximate a listing's income.
+Inside Airbnb uses web scraping scripts to extract publicly available information from Airbnb's website every quarter. These scripts navigate the Airbnb site, accessing various pages to retrieve data such as listing titles, descriptions, hosts, pricing, and more. The collected data is verified, cleaned, and made available on the Inside Airbnb website for users to explore online or download for analysis. In addition to providing a snapshot, Inside Airbnb conducts in-depth investigations using this raw data to derive more insightful information for users. For instance, the platform employs a proprietary "San Francisco Model" to estimate the frequency with which an Airbnb listing is rented out and to approximate a listing's income.
 
-## 4. How does the method of collection impact the completeness and/or accuracy of its representation of the process it seeks to study, and what wider issues does this raise?
+## 4. How does the method of collection impact the accuracy of its representation of the process it seeks to study, and what broader issues does this raise?
 
-There are several potential issues with this method of data collection that may challenge the validity of any research work done based on it:
+Several potential issues with this method of data collection may challenge the validity of any research work done based on it:
 
-1.  Pricing and availability among others are extremely dynamic attributes set by hosts that cannot be captured accurately with web-scraping, which only reflects a snapshot of the website at one specific moment in time. Data capture can only capture real-time AirBnb data, and long-term comparative analysis requires data collection in advance and at higher frequencies
-2.  Data quality susceptible to changes in the structure of the website. Web scraping also only accesses publicly available listings.
-3.  Data quality depends on user input and do not guarantee accuracy (e.g. bogus listings)
-4.  Has ethical and legal implications which will be discussed in the next section
+1.  Pricing and availability, among others, are highly dynamic attributes set by hosts that cannot be captured accurately with web-scraping, which only reflects a snapshot of the website at one specific moment. Data capture can only capture real-time Airbnb data, and long-term comparative analysis requires data collection in advance and at higher frequencies
+2.  Data quality is susceptible to changes in the website's structure. Web scraping also only accesses publicly available listings.
+3.  Data quality depends on user input and does not guarantee accuracy (e.g. bogus listings)
+4.  Has ethical and legal implications, which will be discussed in the next section
 
 ## 5. What ethical considerations does the use of this data raise?
 
-The ethos of InsideAirbnb raises three ethical consideration:
-
-- First, Airbnb is a profitable company, making their data public without interfering with normal operations makes it easier to regulate them. But as landlords and renters, they have the right to request that their personal information not be made public elsewhere. However, it is not possible to ask everyone’s consent when the data is crawled. Therefore, using this data may be needed to handle sensitive personal information. For example, this could have implications for home privacy and home security.
-- Second, as the data is simply extracted and shown, users can only see the surface and cannot understand the context and methodology, unless they inquire further. It may cause misuse of data to public opinion (D’Ignazio and Klein, 2020). For example, the rental activities of a particular group may be negatively analyzed, which will reinforce the stereotype of this group and then trigger discrimination and antagonism mood of society.
-- Third, data settings are always influenced by power (D’Ignazio and Klein, 2020). Airbnb often leaves out reviews that aren’t friendly to properties and focuses on those that are profitable, such as setting its recommendation algorithm to favor partners. Therefore, users need to be fair when using such data.
+- First, landlords and renters have the right to request that their personal information not be made public elsewhere. Therefore, using this data may be needed to handle sensitive personal information and consider hosts' privacy and home security.
+- Second, it may cause data misuse to affect public opinion (D’Ignazio and Klein, 2020). For example, the rental activities of a particular group may be negatively analysed, reinforcing the stereotype of this group and then triggering discrimination and antagonism toward society.
+- Third, power always influences data settings (D’Ignazio and Klein, 2020). Airbnb often leaves out reviews that aren’t friendly to properties and focuses on those that are profitable, such as setting its recommendation algorithm to favour partners.
 
 --------------------------------------------
 
-## 6. With reference to the data (*i.e.* using numbers, figures, maps, and descriptive statistics), what does an analysis of Listing types suggest about the nature of Airbnb lets in London?
+## 6. With reference to the data, what does an analysis of Listing types suggest about the nature of Airbnb lets in London?
 
 #### Background and research question
-Airbnb provides indispensable accommodation for the development of tourism. As a short-term rental platform, the mobility of tenants is one of its major characteristics. Mobility is a factor in crime (Mburu and Helbich, 2016), so recently there has been increasing concern about whether Airbnb, which brings high mobility to the local community, could be linked to an increase or decrease in crime. For example, Xu, Pennington-Gray and Kim (2019) studied the relationship between Airbnb density and crime in Florida and found that certain types of listings do have a significant impact on crime. Therefore, we try to explore whether Airbnb in London could also have an impact on crime based on Lower Layer Super Output Areas (LSOAs) level. The reason why we choose LSOA level as this allows for a more detailed examination of localized patterns and variations within a borough. Different neighborhoods within a borough can exhibit distinct characteristics that might be overlooked in a broader borough-level analysis as crime rates and housing patterns can vary significantly from one neighborhood to another. 
+As a short-term rental platform, the mobility of tenants is one of its major characteristics. Mobility is a factor in crime (Mburu and Helbich, 2016), so recently there has been increasing concern about whether Airbnb, which brings high mobility to the local community, could be linked to an increase or decrease in crime. For example, Xu, Pennington-Gray and Kim (2019) studied the relationship between Airbnb density and crime in Florida and found that certain types of listings do have a significant impact on crime. Therefore, we try to explore whether Airbnb in London could also have an impact on crime based on Lower Layer Super Output Areas (LSOAs) level. The reason why we choose LSOA level as this allows for a more detailed examination of localized patterns and variations within a borough. Different neighborhoods within a borough can exhibit distinct characteristics that might be overlooked in a broader borough-level analysis as crime rates and housing patterns can vary significantly from one neighborhood to another. 
 
-Finally, our research question is: Does the type of Airbnb listing have an impact on crime in the neighbourhood? 
+In short, our research question is: Does the type of Airbnb listing have an impact on crime in the neighbourhood? 
 
 #### Data source
 The Airbnb dataset is from the September 2023 updated version provided by Inside Airbnb. The crime dataset is from data.police.uk and has the same time dimension as Airbnb’s. The spatial partitioning dimension in this study is LSOA and is from the Office of National Statistics website. 
 
 #### Defining the data
-In order to examine the nature of Airbnb listing and crime relationship, we want to first establish the parameters to focus on a subset of the datasets:
-
-As Xu, Pennington-Gray, and Kim (2019) mentioned different types of listings have different impacts, we refer to their classification standards to divide Airbnb housing into private rooms and entire homes, which will be treated as independent variables. Each variable is defined as follows (*Data Dictionary*, nd):  
+In order to examine the nature of short-lets and crime relationship, we want to first establish the parameters to focus on just a subset. As Xu, Pennington-Gray, and Kim (2019) mentioned different types of short-lets have different impacts, we refer to their classification standards defining them as follows (*Data Dictionary*, nd):  
 - _Entire home:_ Tenants can enjoy an entire whole listing.  
 - _Private room:_ The tenant has a private bedroom but may need to share some space with others such as the kitchen.  
 
-When preprocessing Airbnb listings data, we excluded hotel rooms (listings by actual hotesl and hostels) since they are not the subject of this research and are also few in numbers. We also exclude Shared rooms due to thier limited number in London. It is worth mentioning that we trim listing price outliers to control for potentially bogus listings. Figure 1a and 1b shows the listing price distrubtion of different room type, before and after our filtering respectively.
+We excluded hotel rooms (listings by actual hotels and hostels) since they are not the subject of this research and are also few in numbers. We also exclude Shared rooms due to thier limited number in London. Lastly, we trimmed listing price outliers to filter out bogus listings. Figure 1a and 1b shows the listing price distribution of different room types, before and after filtering.
 
 ```{python}
 # Transform price to float
@@ -641,10 +632,10 @@ listings1 = listings[(listings.price >= q1 - 1.5 * iqr) & (listings.price <= q3 
 room = listings.room_type.unique()
 palette = sns.color_palette()
 
-fig,(ax1,ax2) = plt.subplots(1,2,figsize=[20,5])
+fig,(ax1,ax2) = plt.subplots(1,2,figsize=[8,5])
 boros.plot(edgecolor='red', facecolor='None',linewidth=0.3,ax=ax2)
 for color,r in zip(palette,room):
-    ax1.hist(listings1[listings1['room_type']==r].price, bins=80, alpha=1, label=r,color=color)
+    ax1.hist(listings1[listings1['room_type']==r].price, bins=50, alpha=1, label=r,color=color)
     listings1[listings1['room_type']==r].plot(column='room_type', markersize=.5, alpha=0.15,ax=ax2,color=color)
 ax1.legend(loc='upper right')
 ax2.axis('off')
@@ -663,10 +654,10 @@ listings2 = listings1[~listings1["room_type"].isin(["Hotel room","Shared room"])
 # Plot
 room = listings2.room_type.unique()
 
-fig,(ax1,ax2) = plt.subplots(1,2,figsize=[20,5])
+fig,(ax1,ax2) = plt.subplots(1,2,figsize=[8,5])
 boros.plot(edgecolor='red', facecolor='None',linewidth=0.3,ax=ax2)
 for color,r in zip(palette,room):
-    ax1.hist(listings2[listings2['room_type']==r].price, bins=80, alpha=1, label=r,color=color)
+    ax1.hist(listings2[listings2['room_type']==r].price, bins=50, alpha=1, label=r,color=color)
     listings2[listings2['room_type']==r].plot(column='room_type', markersize=.5, alpha=0.15,ax=ax2,color=color)
 ax1.legend(loc='upper right')
 ax2.axis('off')
@@ -680,10 +671,10 @@ plt.show()
 listings=listings2.copy()
 ```
 
-As for crime data, as we want to make recommendations more specific to different types and levels of crime, we classify crime into the following types (Xu, Pennington-Gray and Kim, 2019; Flatley, 2016):
+As for crime data, as we wanted to make recommendations more specific to different categories of crime, we classified crime into the following types (Xu, Pennington-Gray and Kim, 2019; Flatley, 2016):
 - **Public order:** public order, drugs, possession of weapons, anti-social behaviour.
 - **Violent (involve force):** robbery, violence and sexual offences.
-- **Property (without force):** bicycle theft, burglary, criminal damage and arson, shoplifting, theft from the person, vehicle crime.
+- **Property (without force):** bicycle theft, burglary, criminal damage and arson, shoplifting, theft from the person, vehicle crime..
 
 These three types of crime will be treated as dependent variables. Figure 2 shows the distribution of crime density per LSOA by type. Note that they take on a skewed distribution (Poisson distribution) for being based on count. We will treat this accordingly in our analysis while also not trimming any outliers at this stage
 
@@ -718,26 +709,18 @@ crime["Category"] = np.where(
 
 ```{python}
 # Plot them
-fig,ax = plt.subplots(1,3,figsize=[20,5])
+fig,ax = plt.subplots(1,3,figsize=[8,3],sharey=True)
 for idx,r in enumerate(crime.Category.unique()):
     ax[idx].hist(crime[crime['Category']==r].groupby('LSOA code').count().Category, bins=100, alpha=0.5, label=r)
     ax[idx].legend(loc='upper right')
-fig.suptitle('Figure 2a: Histogram of each crime category (LSOA level)',x=0.5,y=0.05)
+fig.suptitle('Figure 2a: Histogram of each crime category (LSOA level)',x=0.5,y=0)
 plt.show()
-
-# fig,ax = plt.subplots(1,1)
-# boros.plot(edgecolor='red', facecolor='None',linewidth=0.3,ax=ax)
-# crime.plot(column='Category', markersize=.5, alpha=0.15,legend=True,cmap='plasma',legend_kwds={'loc':(0.8,0)},ax=ax)
-# ax.axis('off')
-# fig.suptitle('Figure 2b: Distribution of crime incidents in Sept 2023',x=0.5,y=0.05)
-# plt.show()
 ```
 
-#### Spatial relationship between airbnb listings and crime
+#### Relationship between Airbnb listings and crime
 
-##### 1. Spatial distribution of each variable
-To start our spatial analysis of crime and listing patterns across LSOAs, distinct geographic concentrations emerge. Public order crimes are dispersed citywide, with notable pockets in Westminster and Hillingdon. Property crimes concentrate in central London, particularly in Westminster, while violent crimes exhibit a similar pattern, with Westminster and Hillingdon standing out. 
-On the other hand, private rooms and entire home exhibit citywide dispersal, with Westminster and Camden featuring prominently in private room concentrations, and the City of London emerging as a hub for entire home. One notaeworth observation is Entire homes are more concentrated in West/Central West London (Westminster, Mayfair), while Private rooms are more prominent in East London, and Central East (Islington, Camden).
+##### 1. Spatial distribution
+To start our spatial analysis of crime and listing patterns across LSOAs, distinct geographic concentrations emerge. Public order crimes are dispersed citywide, with notable pockets in Westminster and Hillingdon. Property crimes concentrate in central London, particularly in Westminster, while violent crimes exhibit a similar pattern, with Westminster and Hillingdon standing out. On the other hand, private rooms and entire homes exhibit citywide dispersal, with Westminster and Camden featuring prominently in Private room listing concentrations and the City of London emerging as a hub for entire homes. 
 
 ```{python}
 lsoa_merge = lsoa.copy()
@@ -788,7 +771,7 @@ lsoa_merge = lsoa_merge.fillna(0)
 
 ```{python}
 # Plot crime / listings by type
-fig, axes = plt.subplots(3, 2, figsize=(15, 15))
+fig, axes = plt.subplots(3, 2, figsize=(10, 10))
 
 lsoa_merge.plot(
     ax=axes[0, 0], column="Public Order crime_count", cmap="Reds", alpha=0.9
@@ -801,11 +784,9 @@ axes[1, 0].set_title("Property crime by LSOA")
 axes[2, 0].set_title("Violent crime by LSOA")
 
 axes[0, 1].axis('off')
-# lsoa_merge.plot(ax=axes[0, 1], column="Shared room_count", cmap="Blues", alpha=0.9)
 lsoa_merge.plot(ax=axes[1, 1], column="Private room_count", cmap="Blues", alpha=0.9)
 lsoa_merge.plot(ax=axes[2, 1], column="Entire home/apt_count", cmap="Blues", alpha=0.9)
 
-# axes[0, 1].set_title("Shared room by LSOA")
 axes[1, 1].set_title("Private room by LSOA")
 axes[2, 1].set_title("Entire home/apt by LSOA")
 
@@ -821,74 +802,25 @@ fig.suptitle('Figure 3: Density by LSOA',x=0.5,y=0)
 plt.show()
 ```
 
-In order to have a sense of the relationship between different airbnb listing type and crime, we will use a superimposed heatmap (Kernel Density Estimate Plot). In A1-2-3 (Private room vs different crime types), there are overlaps in the north-west direction of central of London. In B1-2-3, entire home shows a spatial density that overlaps in the central of London area north of the Thames for each offence type. Overall, we 
-
-```{python}
-# KDE plot of listing types vs Crime categories
-# PATIENCE: It takes 3-4 minutes to run
-
-fig, axes = plt.subplots(3, 2, figsize=(15,15))
-
-# Base
-for ax in fig.get_axes():
-    ax.axis('off')
-    ax.axes.xaxis.set_visible(False)
-    ax.axes.yaxis.set_visible(False)
-    ax.set_xlim([501000, 563000])
-    ax.set_ylim([155000, 202000])
-    boros.plot(edgecolor="red", facecolor="None", linewidth=0.3, ax=ax)
-
-# KDE maps
-prop_cat = ["Private room", "Entire home/apt"]
-crime_cat = ["Public Order crime", "Property crime", "Violent crime"]
-s = ['A','B']
-# Create thresholds
-levels = [0.2, 0.4, 0.6, 0.8, 1]
-
-for i in range(3):
-    for j in range(2):
-        sns.kdeplot(
-            ax=axes[i, j],
-            x=crime[crime["Category"] == crime_cat[i]].geometry.x,
-            y=crime[crime["Category"] == crime_cat[i]].geometry.y,
-            levels=levels,
-            fill=True,
-            cmap="Reds",
-            alpha=0.5,
-        )
-        sns.kdeplot(
-            ax=axes[i, j],
-            x=listings[listings.room_type == prop_cat[j]].geometry.x,
-            y=listings[listings.room_type == prop_cat[j]].geometry.y,
-            levels=levels,
-            fill=True,
-            cmap="Blues",
-            alpha=0.5,
-        )
-        axes[i, j].set_title(f"{s[j]}{i+1} - {crime_cat[i]} vs. {prop_cat[j]}")
-        
-plt.tight_layout()
-fig.suptitle('Figure 4: Superimposed heatmaps (Red: Crime, Blue: Listings)', x=0.5,y=0)
-plt.show()
-```
-
 ##### 2. Global Correlation and Spatial correlation
 
-From the correlation matrix, beyond the unsurprising correlation among the different crime categories, and among the room types, which are not of particular interest to us, we see that the correlation  between **entire home** and **property crime** is the strongest, with a correlation coefficient of 0.51. On the contrary, the correlation between private room and property crime is the weakest, with a correlation coefficient of 0.284. Overall, it is interesting to see that entire home listings seem to be more exposed to higher crime of all types at LSOA level. Although this does not give us an indication of casuality, it reinforces to untrained eyes a common belief among opponents of Airbnbs that not having live-in either engenders or is a magnet for crime.
+Zooming in to compare these variables among LSOAs via a correlation matrix with our variables of interest: We see that the correlation between **entire home** and **property crime** is the strongest (0.51). On the contrary, the correlation between private rooms and property crime is the weakest (0.284). Overall, it is interesting to see that entire home listings seem to be more exposed to crime, reinforcing the perception among opponents of Airbnb that not having live-in either engenders or is a magnet for crime. 
 
 ```{python}
 # Make the correlation matrix
-lsoa_merge_sub1 = lsoa_merge.iloc[:, -7:]
+cols = [col for col in lsoa_merge.columns if 'count' in col]
+
+lsoa_merge_sub1 = lsoa_merge[cols]
 lsoa_merge_sub1_comatrix = lsoa_merge_sub1.corr()
 # plot the correlation matrix plot
-fig, axes = plt.subplots(figsize=(20,5))
+fig, axes = plt.subplots(figsize=(7,5))
 sns.heatmap(
     lsoa_merge_sub1_comatrix,
     cmap="viridis",
     annot=True,
     fmt=".3f",
     linewidths=0.1,
-    annot_kws={"size": 10},
+    annot_kws={"size": 8},
     ax=axes,
 )
 axes.tick_params(labelsize=9)
@@ -898,10 +830,10 @@ plt.tight_layout()
 plt.show()
 ```
 
-When looking at the spatial distribution of all Airbnb listings and crimes, it is not surprising to see that the areas that are brown in colour, which means there are a large number of both Airbnb listings and crimes, are mostly concentrated in the central of London such as Westminster. Unexpectedly, an area in Hillington shows a high concentration, which has 198 criminal records and 55 listings. Similarly, the colour of an area of Kingston upon Thames also is brown, with 224 criminal records and 41 listings. These areas received little attention before.
+Beyond static correlation, when visualised on a map, more patterns emerge. Other notable areas outside of central London with a high concentration of crime incidents and Airbnb listings are **Hillington (Heathrow Airport), Richmond upon Thames, Croydon, Greenwich, Hounslow, etc.** Some are tourist destinations, while others, in contrast, seem to be in residential areas. This might allude to an underlying relationship between the concentration of Airbnb and crimes with tourism in general or population centres, and not between these variables alone. 
 
 ```{python}
-# Convert shapefil to geojson that the visualisation function requires
+# Convert shapefile to geojson that the visualisation function requires
 lsoa_merge_wgs = lsoa_merge.to_crs(4326)
 lsoa_merge_wgs.to_file(os.path.join("data", "lsoa_merge.geojson"))
 geojson = json.load(open(os.path.join("data", "lsoa_merge.geojson"), "r"))
@@ -916,7 +848,7 @@ conf = conf_defaults()
 conf["plot_title"] = "Airbnb and Crime in London, Sep 2023"
 conf["hover_x_label"] = "Crime"  # Label to appear on hover
 conf["hover_y_label"] = "AirBnb listings"  # Label to appear on hover
-conf["width"] = 1000
+conf["width"] = 700
 conf["center_lat"] = 51.508  # Latitude of the center of the map
 conf["center_lon"] = -0.1  # Longitude of the center of the map
 conf["map_zoom"] = 9  # Zoom factor of the map
@@ -943,25 +875,34 @@ fig = create_bivariate_map(
 fig.show()
 ```
 
-<img src="https://www.dropbox.com/scl/fi/e8epq7uc943zvjz2es6si/newplot-1.png?rlkey=rlgydu69vjzuxnuvch8ptu2y1&dl=1" alt="Airbnb vs Crime" style="width:1000px;"/>
+<img src="https://www.dropbox.com/scl/fi/e8epq7uc943zvjz2es6si/newplot-1.png?rlkey=rlgydu69vjzuxnuvch8ptu2y1&dl=1" alt="Airbnb vs Crime" style="width:700px;"/>
 
-*Figure 6:* Correlation Matrix - Listings type vs Crime category</figure>
+*Figure 6:* Bivariate Map of Airbnb and Crime in London</figure>
 
-As the entire home and property crime show the strongest correlation, we pay separate attention to their correlation spatial distribution.  From this map, we can see that the situation is similar to the previous one, in which the problem of an area in Hillington and Kingston upon Thames respectively still exists.
-
-Overall, as the data shows on the map, the distribution of Airbnb listings does align with the distribution of crime in many areas. Similarly, we find that all of the independent variables we set are correlated with the dependent variables. However, correlation does not mean causation, so we would like to do a further regression analysis to determine whether different types of Airbnb listings actually have an impact on different types of crime.
+Based on descriptive statistics, we can draw certain mixed conclusions about the relationship between crime and short-let. On the one hand, the distribution of Airbnb listings does align with the distribution of crime in many areas. More notably, we find correlations between Entire home/apt and Property crime. On the other hand, an underlying factor might shape this relationship across space (spatial dependence, confounding variables such as tourism attractiveness, etc.) 
 
 --------------------------------------------
 
-## 7. Linear regression analysis
+## 7. Inferrences from the airbnb data and Policy recommendations
+### Variables
 
-Since the causes of crime are complex, and previous studies have shown that some Airbnb listing types may only have a weak effect on crime (Van Holm and Monaghan, 2021), we attempted to add some controlled variables to improve the interpretability and accuracy of the overall linear regression model. We collected data from the Office of National Statistics and proposed the following variables: population density, unemployed density, young people (15-24 ages) density, the density of deprivation index which equals or above 3, the density of education level which equals or above Level 3, the density of tenants (excludes from Airbnb but includes from the council). 
+We will perform a regression analysis to determine whether different shortlet has an effect on crime, controlling for other relevant sociodemographic variables as much as possible. The chosen variables (calculated as proportions) are:
 
-These variables directly or indirectly provide a level of deprivation, which serves as a significant socioeconomic indicator linked to crime patterns (*Crimes recorded by neighbourhood income deprivation decile in London*, 2022). By understanding the degree of deprivation in different neighborhoods we can see potential correlations between economic hardship and crime rates. Higher levels of deprivation in specific areas may indicate increased vulnerability to certain types of crimes. This variable is instrumental in identifying and addressing underlying factors contributing to crime in locations.
+- population density,
+- proportion of unemployed people among 16+
+- proportion of young people (15-24 ages),
+- proportion of household with a deprivation index of 3+
+- proportion of people with qualification level 3 or higher
+- proportion of tenanted household over all households 
 
-Meanwhile, the shared room, private room, and the entire home, which are independent variables, and dependent variables property crime, public order crime, and violent crime are all converted into density forms.
+These control variables directly or indirectly provide a level of deprivation, which serves as a significant socioeconomic indicator linked to crime patterns (*Crimes recorded by neighbourhood income deprivation decile in London*, 2022). Meanwhile, for our target independent and dependent variables, we will also derive:
 
-#### Preparing Regression Data
+- proportion of Private and Entire home listings over total household, and
+- proportion of property crime, public order crime, and violent crime over LSOA population
+
+### Preparing Regression Data
+
+Since we are using a simple linear regression to model this relationship to test our hypothesis, we must make sure the variables satisfy basic distribution requirements. Therefore we performed log transformations for select variable. Figure 7 shows the variables post-transformation.
 
 ```{python}
 # Select columns and calculate density for key variables
@@ -992,7 +933,6 @@ lsoa_merge1 = lsoa_merge.merge(lsoa_stat_sel[['LSOA code',
 # Select columns and calculate density
 lsoa_merge1['crime_density'] = lsoa_merge1['crime_count']/lsoa_merge1['All usual residents']
 lsoa_merge1['listing_density'] = lsoa_merge1['listing_count']/lsoa_merge1['All Households']
-# lsoa_merge1['Shared room_density'] = lsoa_merge1['Shared room_count']/lsoa_merge1['All Households']
 lsoa_merge1['Private room_density'] = lsoa_merge1['Private room_count']/lsoa_merge1['All Households']
 lsoa_merge1['Entire home/apt_density'] = lsoa_merge1['Entire home/apt_count']/lsoa_merge1['All Households']
 lsoa_merge1['Public Order crime_density'] = lsoa_merge1['Public Order crime_count']/lsoa_merge1['All usual residents']
@@ -1018,39 +958,27 @@ def normal_from_dist(series):  #define function name and required arguments (in 
 ```
 
 ```{python}
-test_cols_df = regressiondata.copy()
+# test_cols_df = regressiondata.copy()
 
-fig, axes = plt.subplots(3,5, figsize=(20, 10))
-axflat = axes.flatten()
-for i, ax in enumerate(np.resize(axflat,axflat.size-2)):
-    sns.distplot(test_cols_df.iloc[:,i], ax=ax)
-    sns.kdeplot(normal_from_dist(test_cols_df.iloc[:,i]), color='r', fill=True, ax=ax)
-    ax.set_title(test_cols_df.columns[i])
-    ax.set_xlabel('')
-    ax.set_ylabel('')
-    ax.set_yticklabels('')
-    sns.despine()
-for ax in axflat[-2:]:
-    ax.axis('off')
-fig.suptitle('Figure 7a: Regression dependent and indenpendent variables (pre-transformation)',x=0.5,y=0)
-plt.tight_layout()
-plt.show()
+# fig, axes = plt.subplots(5,3, figsize=(7, 10))
+# axflat = axes.flatten()
+# for i, ax in enumerate(np.resize(axflat,axflat.size-2)):
+#     sns.distplot(test_cols_df.iloc[:,i], ax=ax)
+#     sns.kdeplot(normal_from_dist(test_cols_df.iloc[:,i]), color='r', fill=True, ax=ax)
+#     ax.set_title(test_cols_df.columns[i],fontsize=7)
+#     ax.set_xlabel('')
+#     ax.set_ylabel('')
+#     ax.set_yticklabels('')
+#     sns.despine()
+# for ax in axflat[-2:]:
+#     ax.axis('off')
+# fig.suptitle('Figure 7a: Regression dependent and indenpendent variables (pre-transformation)',x=0.5,y=0)
+# plt.tight_layout()
+# plt.show()
 ```
 
-Need log transformation for
-- Listing density
-- Crime density
-- Property crime density
-- Violent crime density
-- Public order crime density
-- Listing density
-- Social rent density
-- Private room density
-- Entire home/apt density
-- population density
-
 ```{python}
-# Log of the variables social rent, shared room, private room, entire home/apt, pop_density, etc.
+# Log of the variables social rent, private room, entire home/apt, pop_density, etc.
 cols = ['social_rent_density','Private room_density','Entire home/apt_density','pop_density','listing_density','crime_density','listing_density','Public Order crime_density','Property crime_density','Violent crime_density']
 for col in cols:
     # remove rows (LSOAs) with no airbnbs
@@ -1061,40 +989,28 @@ regressiondata.drop(cols,axis=1,inplace=True)
 ```
 
 ```{python}
-# histogram for the variables in regressiondata_std compared with normal distribution
-# test_cols_df = regressiondata.copy()
-
-# fig, axes = plt.subplots(7,2, figsize=(30, 30))
-# for i, ax in enumerate(axes.flatten()):
-#     sns.distplot(test_cols_df.iloc[:,i], ax=ax)
-#     sns.kdeplot(normal_from_dist(test_cols_df.iloc[:,i]), color='r', fill=True, ax=ax)
-#     ax.set_title(test_cols_df.columns[i])
-#     ax.set_xlabel('')
-#     ax.set_ylabel('')
-#     ax.set_yticklabels('')
-#     sns.despine()
-# plt.show()
-
 test_cols_df = regressiondata.copy()
 
-fig, axes = plt.subplots(3,5, figsize=(20, 10))
+fig, axes = plt.subplots(5,3, figsize=(7, 10))
 axflat = axes.flatten()
 for i, ax in enumerate(np.resize(axflat,axflat.size-2)):
     sns.distplot(test_cols_df.iloc[:,i], ax=ax)
     sns.kdeplot(normal_from_dist(test_cols_df.iloc[:,i]), color='r', fill=True, ax=ax)
-    ax.set_title(test_cols_df.columns[i])
+    ax.set_title(test_cols_df.columns[i],fontsize=7)
     ax.set_xlabel('')
     ax.set_ylabel('')
     ax.set_yticklabels('')
     sns.despine()
 for ax in axflat[-2:]:
     ax.axis('off')
-fig.suptitle('Figure 7b: Regression dependent and indenpendent variables (post-transformation)',x=0.5,y=0)
+fig.suptitle('Figure 7: Regression dependent and indenpendent variables (post-log-transformation)',x=0.5,y=0)
 plt.tight_layout()
 plt.show()
 ```
 
 ```{python}
+#| output: false
+
 # drop crime related columns to check for multicollinearity
 regressiondata_VIF = regressiondata.drop([col for col in regressiondata.columns if 'crime' in col],axis=1)
 # drop columns with high VIF
@@ -1102,7 +1018,13 @@ regressiondata_VIF = drop_column_using_vif_(regressiondata_VIF)
 selected_cols = regressiondata_VIF.columns.tolist()
 ```
 
-#### Regression Model
+### Regression Model Results
+
+In analysing the factors affecting the density of each type of crime, we applied ordinary least squares (OLS) to construct a regression model. We found some key predictor variables to be statistically significant. 
+
+Looking directly at our target variables, **Entire home/apt** density has a notable effect on property crime incidents (coeff=0.183, p-value<0.05), followed by public order crime (coeff=0.169, p-value<0.05) and finally violent crime (coeff=0.101, p-value<0.05). Meanwhile, **Private room** density interestingly only has a notable and significant effect on public order crime (p-value<0.05) and violent crime (p-value<0.05) 
+
+Despite some signs of heteroscedasticity (see Figure 8), this has already been greatly accounted for after our log transformation)
 
 ```{python}
 models =[]
@@ -1119,47 +1041,38 @@ for i in ['crime_','Property crime_', 'Violent crime_', 'Public Order crime_']:
     print('\n')
 ```
 
-After linear regression analysis, we come to the following conclusions:
-
-- For property crime, only the entire home has a positive impact on it. 
-- For violent crime, all listing types have a positive impact on it. 
-- For public order crime, all listing types have a positive impact on it
-
-#### Residual Analysis to check for OLS assumptions
-
 ```{python}
 # Residuals vs. Fitted plot
-fig,axes = plt.subplots(4,3,figsize=(20, 15))
-for i in range(4):
-    # Plot the residuals vs fitted values on ax1
-    axes[i,0].scatter(results[i].fittedvalues, results[i].resid, alpha = 0.5, s=10)
-    axes[i,0].set_xlabel(f'Fitted values')
-    axes[i,0].set_ylabel('Residual')
-    axes[i,0].set_title(f'Residual vs. Fitted Plot for {models[i].endog_names}')
-    axes[i,0].xaxis.label.set_visible(False)
+fig,axes = plt.subplots(1,3,figsize=(7,3))
+# Plot the residuals vs fitted values on ax1
+axes[0].scatter(results[0].fittedvalues, results[0].resid, alpha = 0.5, s=5)
+axes[0].set_xlabel(f'Fitted values')
+axes[0].set_ylabel('Residual')
+axes[0].set_title(f'Residual vs. Fitted Plot for {models[0].endog_names}',fontsize=7)
 
-    # QQplot on ax2
-    sm.qqplot(results[i].resid, line='s', ax=axes[i,1])
-    axes[i,1].set_title(f'QQ Plot for {models[i].endog_names}')
-    axes[i,1].xaxis.label.set_visible(False)
+# QQplot on ax2
+sm.qqplot(results[0].resid, line='s', markersize=5,ax=axes[1])
+axes[1].set_title(f'QQ Plot for {models[0].endog_names}',fontsize=7)
         
-    # Residual distribution on ax3
-    axes[i,2].hist(results[i].resid, bins=50)
-    axes[i,2].set_xlabel('Residual')
-    axes[i,2].set_ylabel('Frequency')
-    axes[i,2].set_title(f'Residual Distribution for {models[i].endog_names}')
-    axes[i,2].xaxis.label.set_visible(False)
-for j in range(3):
-    axes[3,j].xaxis.label.set_visible(True)
-    
-fig.suptitle('Figure 8: Residual Analysis to confirm OLS assumptions',x=0.5,y=0)
+# Residual distribution on ax3
+axes[2].hist(results[0].resid, bins=50)
+axes[2].set_xlabel('Residual')
+axes[2].set_ylabel('Frequency')
+axes[2].set_title(f'Residual Distribution for {models[0].endog_names}',fontsize=7)
+
+fig.suptitle('Figure 8: Residual Analysis to confirm OLS assumptions (All Crime)',x=0.5,y=0)
 plt.tight_layout()
 plt.show()
 ```
 
-Comment
+### Accounting for spatial autocorrelation
 
-#### Residual Moran's I to check if there is Spatial Lag within the Residuals (spatial autocorrelation unaccounted for in the model)
+The fact that the crime observed in an LSOA affects crime observed in the neighbouring LSOAs results in spatial autocorrelation among the residuals. In fact, our test shows that there is a slight spatial autocorrelation among the residuals. Areas where our model might under-predict crime are in red (HH), whereas areas where our model might over-predict crime are in blue (LL). Fortunately, the Spatial Error Model below (introducing spatial component into our original OLS model for All Crimes) shows that it does not significantly affect the coefficients of our target variables. More specifically:
+
+- **Private room** coeff=0.043 vs 0.040 originally (slightly stronger effect)
+- **Entire home/apt** coeff=0.1473 vs 0.1645 originally (slightly weaker effect)
+
+With this, we can conclude that there is a positive effect of the density of Airbnb listings on crime in a neighbourhood, especially for Entire home/apt listings.
 
 ```{python}
 # Local Moran's I for residual of OLSmodel
@@ -1171,21 +1084,21 @@ w.transform = 'r'
 residuals = results[0].resid
 moran = Moran(residuals, w)
 moran_loc = Moran_Local(residuals, w)
-lisa_cluster(moran_loc, lsoa, p=0.05, figsize = (9,9),legend_kwds={'loc': 'lower right'})
+lisa_cluster(moran_loc, lsoa, p=0.05, figsize = (7,5),legend_kwds={'loc': 'lower right'})
 plt.title(f'Residuals Moran\'s I - {models[0].endog_names}\nGlobal stat = {moran.I:.2f}')
 plt.tight_layout()
 plt.show()
 
-fig, axes = plt.subplots(1, 3, figsize=(18,6))
+fig, axes = plt.subplots(1, 3, figsize=(7,3))
 ax = axes.flatten()
 for i in range(3):
     residuals = results[i].resid
     moran = Moran(residuals, w)
     moran_loc = Moran_Local(residuals, w)
-    lisa_cluster(moran_loc, lsoa, p=0.05,ax=ax[i],legend_kwds={'loc': 'lower right'})
-    ax[i].title.set_text(f'Residuals Local Moran\'s I - {models[i+1].endog_names}\nGlobal stat = {moran.I:.2f}')
+    lisa_cluster(moran_loc, lsoa, p=0.05,ax=ax[i],legend=False)
+    ax[i].set_title(f'Residuals Local Moran\'s I - {models[i+1].endog_names}\nGlobal stat = {moran.I:.2f}',fontsize=5)
 
-fig.suptitle('Figure 9: Residual Morans I - By category',x=0.5,y=0)
+fig.suptitle('Figure 9: Residual Morans I - By category',x=0.5,y=0.1)
 plt.tight_layout()
 plt.show()
 ```
@@ -1210,16 +1123,15 @@ mod1 = GM_Error_Het(
 print(mod1.summary)
 ```
 
+### Do short-lets in different areas have a different effect on crime?
+
+Using a Geographically Weighted Regression, we can further visualise where precisely the effect of short lets on crime is statistically significant. The results show that:
+
+- **Private Room** presence has a particularly strong effect on Crime in Southeast London (Southwark, Bermondsey)
+- **Entire Home** presence has a particularly strong effect on Crime (inc Property Crime) in West End and Oxford Street
+
 ```{python}
-Comment
-```
-
----------
-
-#### Geographically Weighted Regression to visualize geo variation of the relationship between different airbnb types and crime_density
-
-```{python}
-# Prepare  dataset inputs
+# Prepare dataset inputs - Crime
 g_y = regressiondata['crime_density_log'].values.reshape((-1,1))
 g_X = regressiondata[selected_cols].values
 lsoa_cen = lsoa.centroid.get_coordinates()
@@ -1229,63 +1141,83 @@ g_coords = list(zip(u,v))
 
 g_X = (g_X - g_X.mean(axis=0)) / g_X.std(axis=0)
 g_y = (g_y - g_y.mean(axis=0)) / g_y.std(axis=0)
-```
 
-```{python}
 # Calibrate GWR model
 gwr_selector = Sel_BW(g_coords, g_y, g_X)
-# gwr_bw = gwr_selector.search(bw_min=500)
+# gwr_bw = gwr_selector.search(bw_min=2)
 # print(gwr_bw)
-gwr_bw = 573
+gwr_bw = 522
 gwr_results = GWR(g_coords, g_y, g_X, gwr_bw).fit()
-```
 
-```{python}
 # Add Paramaters back to geo dataframe for mapping
 lsoa['gwr_intercept'] = gwr_results.params[:,0]
 for i in range(len(selected_cols)-1):
     lsoa['gwr_'+selected_cols[i]] = gwr_results.params[:,i+1]
+    
 # Filter Insignificant coefficients alpha 0.05
 gwr_filtered_t = gwr_results.filter_tvals(alpha = 0.05)
 ```
 
 ```{python}
-# Map them
+# Prepare dataset inputs - Property Crime
+g_y1 = regressiondata['Property crime_density_log'].values.reshape((-1,1))
+g_X = regressiondata[selected_cols].values
+lsoa_cen = lsoa.centroid.get_coordinates()
+u = lsoa_cen['x']
+v = lsoa_cen['y']
+g_coords = list(zip(u,v))
+
+g_X = (g_X - g_X.mean(axis=0)) / g_X.std(axis=0)
+g_y1 = (g_y1 - g_y1.mean(axis=0)) / g_y1.std(axis=0)
+
+# Calibrate GWR model
+gwr_selector1 = Sel_BW(g_coords, g_y1, g_X)
+# gwr_bw1 = gwr_selector1.search(bw_min=2)
+# print(gwr_bw1)
+gwr_bw1 = 560
+gwr_results1 = GWR(g_coords, g_y1, g_X, gwr_bw1).fit()
+
+# Add Paramaters back to geo dataframe for mapping
+lsoa['gwr_intercept_prop_'] = gwr_results1.params[:,0]
+for i in range(len(selected_cols)-1):
+    lsoa['gwr_prop_'+selected_cols[i]] = gwr_results1.params[:,i+1]
+
+# Filter Insignificant coefficients alpha 0.05
+gwr_prop_filtered_t = gwr_results1.filter_tvals(alpha = 0.05)
+```
+
+```{python}
+# Map them both, sig coeff only
 type = ['Entire home/apt','Private room']
-fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(15,10))
-for i in range(len(type)):
-    lsoa.plot(column=f'gwr_{type[i]}_density_log', cmap = 'coolwarm', linewidth=0.001, scheme = 'naturalbreaks', k=5, legend=True, legend_kwds={'bbox_to_anchor':(1.10, 0.96)},  ax=axes[i,0])
-    lsoa.plot(column=f'gwr_{type[i]}_density_log', cmap = 'coolwarm', linewidth=0.001, scheme = 'naturalbreaks', k=5, legend=False, legend_kwds={'bbox_to_anchor':(1.10, 0.96)},  ax=axes[i,1])
-    lsoa[gwr_filtered_t[:,1] == 0].plot(color='white', linewidth=0.001, edgecolor='white', ax=axes[i,1])
+fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(8,8))
+for i in range(len(type)): 
+    lsoa.plot(column=f'gwr_{type[i]}_density_log', cmap = 'coolwarm', linewidth=0.001, scheme = 'naturalbreaks', k=5, legend=True, legend_kwds={'bbox_to_anchor':(1.10, 0.2)},  ax=axes[i,0])
+    lsoa[gwr_filtered_t[:,1] == 0].plot(color='white', linewidth=0.001, edgecolor='white', ax=axes[i,0])
+    boros.plot(edgecolor='red', facecolor='None',linewidth=0.1,ax=axes[i,0])
+
+    lsoa.plot(column=f'gwr_prop_{type[i]}_density_log', cmap = 'coolwarm', linewidth=0.001, scheme = 'naturalbreaks', k=5, legend=True, legend_kwds={'bbox_to_anchor':(1.10, 0.2)},  ax=axes[i,1])
+    lsoa[gwr_prop_filtered_t[:,1] == 0].plot(color='white', linewidth=0.001, edgecolor='white', ax=axes[i,1])
+    boros.plot(edgecolor='red', facecolor='None',linewidth=0.1,ax=axes[i,1])
+    
     axes[i,0].axis("off")
     axes[i,1].axis("off")
-    axes[i,0].set_title(f'({i+1}a) {type[i]} vs. Crime, all coeffs', fontsize=12)
-    axes[i,1].set_title(f'({i+1}b) {type[i]} vs. Crime, significant coeffs', fontsize=12)
+    axes[i,0].set_title(f'({i+1}a) {type[i]} vs. Crime, significant coeffs', fontsize=8)
+    axes[i,1].set_title(f'({i+1}b) {type[i]} vs. Property Crime, significant coeffs', fontsize=8)
 plt.tight_layout()
-fig.suptitle('Figure 10: Geographically weighted effect of airbnb listings on crime',x=0.5,y=0)
+fig.suptitle('Figure 10a: Geographically weighted effect of short-lets on crime',x=0.5,y=0)
 plt.show()
 ```
 
-Based on all of our analysis, we would like to make the following recommendations to Airbnb users, the Airbnb company and the government to minimize Airbnb's impact on crime.
+### Reflection and Recommendations
+After the public consultation on the policy in 2022, the government will require landlords to register and will conduct random checks on some listings or require landlords to upload legal documents to prove the safety of their listings (Consultation on a registration scheme for short-term lets in England, 2023). While this will allow for better listing management and tenants' safety, we recommend further actions based on our analysis thus far:
 
-For Governments:
-- To enhance the safety of short-term rentals, governments should consider implementing a Registration/Licensing Scheme akin to those for hotels. This initiative could include regulations like owner-occupied residences, a cap on the number of renters, and neighbour notifications (Vande Bunte, 2014).
-- Collaborating closely with Airbnb is also crucial to establish stringent criteria for vetting listings and mitigate criminal activities effectively (Wachsmuth and Weisler, 2018). Also, the government can ask Airbnb to share data with local police departments to help them identify areas with high Airbnb density.
-- To provide a threshold in areas with particularly high crime rates and legislate to limit the number of Airbnb listings.
-- To add more police presence in places where Airbnb is especially dense.
+First, for **property crime**,*entire home* listings are at particular risk, whether shortlet tenants committing theft or disturbances against neighbours, or being targeted. We suggest that Airbnb should strengthen the background checks of tenants (Barron, Kung, and Proserpio, 2018) and choose whether to ban the use of the Airbnb platform according to the number of tenants with criminal property records. If permitted to use, Airbnb needs to provide relevant information to the landlord and keep records synchronised with local police departments. In the property security protection of tenants, Airbnb needs to strengthen the door lock management, such as encouraging the landlord to replace the smart door lock as much as possible and allowing each group of tenants to reset their password. One highly prioritised area should be West End, Oxford Street
 
-For Airbnb:
-- Enhancing background checks for hosts and tenants will contribute to mitigating community crime rates (Barron, Kung, and Proserpio, 2018).
-- To ensure responsive security measures are in place, particularly after receiving security reports about listings, including the potential removal of listings after multiple reports (Grind and Shifflett, 2019). It will further add to the platform's commitment to user safety.
-- To pay for additional security cameras in areas with high Airbnb density such as listings in the City of London and Hillington.
-- Permanently block the use of Airbnb for users who do not comply with Airbnb's guidelines or who are reported for illegal actions such as committing a crime against a neighbour/in the property.
-- Set up a special channel for tenants to easily complain to the landlord or shared tenants.
+Second, based on the finding that there is a positive impact on **violent crime and public order crime**. Since our crime data cannot be detailed into whether or not the offence occurred within the listing, the following recommendations will consider the possibility of crimes occurring in private room listings:
 
-For Users:
-
-Users are encouraged to comply with local laws and regulations governing short-term rentals.  
-- Users should be aware of and adhere to regulations, such as the New York State Multiple Dwelling Law affecting rentals (Schneiderman, 2014), which are vital for fostering a secure environment.  
-- The implementation of education and outreach programs, in line with the recommendations of Felson et al. (2019), can significantly contribute to crime reduction and heightened public awareness.
+* **a) For Airbnb**, more regulations on tenants' behaviour are needed. For example, while Airbnb currently states the required quiet time for tenants on its booking interface, it does not specify penalties. For tenants reported for taking drugs, disturbing residents, committing crimes against neighbours or listings, or anything else violating Airbnb’s rules, Airbnb shall block the tenant’s Airbnb account based on the severity. Moreover, Airbnb should set up efficient channels to ensure responsive security measures are in place, making it easier for tenants or landlords to file complaints against each other. Especially after receiving safety reports about the listings, Airbnb should consider taking the listings offline (Grind and Shifflett, 2019). 
+* **b) For the government**, there are benefits to regulating shortlets more strictly, e.g. enforcing owner-occupied residences, a cap on the number of renters, and neighbour notifications (Vande Bunte, 2014). Moreover, we could refer to San Francisco’s approach, which imposes strict rules on the duration each landlord can rent out a property each year, effectively controlling the number of short-rental properties (Cromarty, 2023), reducing the transient population (Mburu and Helbich, 2016). Besides, a conscious effort to increase police presence in places where Airbnb is particularly dense should be made. 
+* **c) For tenants**, both Airbnb and the government should encourage them to understand and comply with local laws and regulations regarding short-term rentals like the New York State Multiple Dwelling Law (Schneiderman, 2014) through various channels, such as news pop-ups and educational publicity programs. Improving public awareness is essential to reducing crime and creating a safe environment (Felson et al., 2019).
 
 ## References
 
@@ -1294,6 +1226,10 @@ Barron, K., Kung, E. and Proserpio, D. (2018) Analysis of the impact of Airbnb r
 Cox, M. and Slee, T. (2016) How Airbnb’s data hid the facts in New York City. Inside Airbnb, [Online] Available at: http://insideairbnb.com/research/how-airbnb-hid-the-facts-in-nyc [Accessed 14 December 2023].
 
 Crime and income deprivation, no date. [Online] Available at: [https://trustforlondon.org.uk/data/crime-and-income-deprivation/#:~:text=Overall%2C 52%25 more crimes were,the least income-deprived 10%25](https://trustforlondon.org.uk/data/crime-and-income-deprivation/#:~:text=Overall%2C%2052%25%20more%20crimes%20were,the%20least%20income%2Ddeprived%2010%25) [Accessed 14 December 2023].
+
+Consultation on a registration scheme for short-term lets in England (2023) Available at: https://www.gov.uk/government/consultations/consultation-on-a-registration-scheme-for-short-term-lets-in-england/consultation-on-a-registration-scheme-for-short-term-lets-in-england (Accessed: 5 December 2023)
+
+Cromarty, H. (2023) The growth in short-term lettings (England). Available at: https://researchbriefings.files.parliament.uk/documents/CBP-8395/CBP-8395.pdf (Accessed: 18 December 2023)
 
 D’Ignazio, C. and Klein, L.F. (2020) ‘The Numbers Don’t Speak for Themselves’, in Data Feminism. [Online] United States: MIT Libraries Experimental Collections Fund.
 
@@ -1320,3 +1256,5 @@ Vande Bunte, M. (2014) Airbnb verdict in Grand Rapids: 1 room and 2 adults, with
 Van Holm, E.J. and Monaghan, J. (2021) ‘The relationship of Airbnb to neighborhood calls for service in three cities’. Cities, 116, p. 103241. doi: [10.1016/j.cities.2021.103241](https://doi.org/10.1016/j.cities.2021.103241).
 
 Xu, Y.-H., Kim, J. and Pennington-Gray, L., no date. ‘Explore the Spatial Relationship between Airbnb Rental and Crime’.
+
+Use of Github Copilot AI within Visual Studio Code IDE in parts.
