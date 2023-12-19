@@ -1146,7 +1146,7 @@ g_y = (g_y - g_y.mean(axis=0)) / g_y.std(axis=0)
 # gwr_selector = Sel_BW(g_coords, g_y, g_X)
 # gwr_bw = gwr_selector.search(bw_min=2)
 # print(gwr_bw)
-gwr_bw = 522
+gwr_bw = 522 # I calibrated this 
 gwr_results = GWR(g_coords, g_y, g_X, gwr_bw).fit()
 
 # Add Paramaters back to geo dataframe for mapping
@@ -1174,7 +1174,7 @@ g_y1 = (g_y1 - g_y1.mean(axis=0)) / g_y1.std(axis=0)
 # gwr_selector1 = Sel_BW(g_coords, g_y1, g_X)
 # gwr_bw1 = gwr_selector1.search(bw_min=2)
 # print(gwr_bw1)
-gwr_bw1 = 560
+gwr_bw1 = 560 # I calibrated this 
 gwr_results1 = GWR(g_coords, g_y1, g_X, gwr_bw1).fit()
 
 # Add Paramaters back to geo dataframe for mapping
@@ -1216,9 +1216,9 @@ plt.show()
 ### Reflection and Recommendations
 After the public consultation on the policy in 2022, the government will require landlords to register and will conduct random checks on some listings or require landlords to upload legal documents to prove the safety of their listings (Consultation on a registration scheme for short-term lets in England, 2023). While this will allow for better listing management and tenants' safety, we recommend further actions based on our analysis thus far:
 
-First, for **property crime**, *entire home* listings are at particular risk, whether shortlet tenants are committing theft or disturbances against neighbours or being targeted. We suggest that Airbnb should strengthen the background checks of tenants (Barron, Kung, and Proserpio, 2018) and choose whether to ban the use of the Airbnb platform according to the number of tenants with criminal property records. If permitted, Airbnb needs to provide relevant information to the landlord and keep records synchronised with local police departments. In the property security protection of tenants, Airbnb needs to strengthen the door lock management, such as encouraging the landlord to replace the smart door lock as much as possible and allowing each group of tenants to reset their password. One highly prioritised area should be the West End, Oxford Street.
+First, for **property crime**, *entire home* shortlets are at particular risk, especially in central London, and *private room* listings in East London, whether shortlet tenants are committing theft or disturbances against neighbours or being targeted. We suggest that Airbnb should strengthen the background checks of tenants (Barron, Kung, and Proserpio, 2018) and choose whether to ban the use of the Airbnb platform according to the number of tenants with criminal property records. If permitted, Airbnb needs to provide relevant information to the landlord and keep records synchronised with local police departments. In the property security protection of tenants, Airbnb needs to strengthen the door lock management, such as encouraging the landlord to replace the smart door lock as much as possible and allowing each group of tenants to reset their password.
 
-Second, based on the finding that there is a positive impact on **violent crime and public order crime**. Since our crime data cannot be detailed into whether or not the offence occurred within the listing, the following recommendations will consider the possibility of crimes occurring in private room listings:
+Second, there is an impact of shortlets on **violent crime and public order crime**. Since our crime data cannot be detailed into whether or not the offence occurred within the listing, the following recommendations will encompass all stakeholders:
 
 * **a) For Airbnb**, more regulations on tenants' behaviour are needed. For example, while Airbnb currently states the required quiet time for tenants on its booking interface, it does not specify penalties. For tenants reported for taking drugs, disturbing residents, committing crimes against neighbours or listings, or violating Airbnb’s rules, Airbnb shall block the tenant’s Airbnb account based on the severity. Moreover, Airbnb should set up efficient channels to ensure responsive security measures, making it easier for tenants or landlords to file complaints against each other. Especially after receiving safety reports about the listings, Airbnb should consider taking the listings offline (Grind and Shifflett, 2019). 
 * **b) For the government**, there are benefits to strictly regulating shortlets, e.g. enforcing owner-occupied residences, a cap on the number of renters, and neighbour notifications (Vande Bunte, 2014). Moreover, we could refer to San Francisco’s approach, which imposes strict rules on the duration each landlord can rent out a property each year, effectively controlling the number of short-rental properties (Cromarty, 2023), reducing the transient population (Mburu and Helbich, 2016). Besides, a conscious effort should be made to increase police presence in places where Airbnb is particularly dense. 
