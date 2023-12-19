@@ -76,7 +76,7 @@ Project Github: https://github.com/hanukikanker/fsds-group-cheers
 ```{python}
 import warnings
 warnings.simplefilter(action="ignore", category=FutureWarning)
-# warnings.filterwarnings("ignore")
+warnings.filterwarnings("ignore")
 import math
 import pandas as pd
 import geopandas as gpd
@@ -572,11 +572,11 @@ print(f'Geo dataframes are in {set(crs)}')
 
 ## 1. Who collected the data?
 
-Inside Airbnb was founded by Murray Cox, who conceived the project and keeps updating and analysing Airbnb data (*About Inside Airbnb*).
+Inside Airbnb was founded by Murray Cox, who conceived the project and keeps updating and analysing Airbnb data (*About Inside Airbnb*, nd).
 
 ## 2. Why did they collect it?
 
-Murray Cox and Co. aim to make Airbnb's data more transparent and accessible to the public. In addition to creating visual dashboards of different cities, they wrote many reports based on these data. For example, they criticised Airbnb’s New York data as misleading (Cox and Slee, 2016). This is meant to benefit others in different ways:
+Murray Cox and Co. aim to make Airbnb's data more transparent and accessible to the public. In addition to creating visual dashboards of different cities, they wrote many reports based on these data. For example, they criticised Airbnb’s New York data as misleading (Cox and Slee, et al. 2016). This is meant to benefit others in different ways:
 
 - Consumers can understand market trends more efficiently, which help them make more informed decisions and choose accommodation that fits their needs and budget;
 - Landlords can have transparency of information, and that can promote fair competition and maintain the stability of short-term rental market prices;
@@ -591,10 +591,10 @@ Inside Airbnb uses web scraping scripts to extract publicly available informatio
 
 Several potential issues with this method of data collection may challenge the validity of any research work done based on it:
 
-1.  Pricing and availability, among others, are highly dynamic attributes set by hosts that cannot be captured accurately with web-scraping, which only reflects a snapshot of the website at one specific moment. Data capture can only capture real-time Airbnb data, and long-term comparative analysis requires data collection in advance and at higher frequencies
-2.  Data quality is susceptible to changes in the website's structure. Web scraping also only accesses publicly available listings.
-3.  Data quality depends on user input and does not guarantee accuracy (e.g. bogus listings)
-4.  Has ethical and legal implications, which will be discussed in the next section
+- Pricing and availability, among others, are highly dynamic attributes set by hosts that cannot be captured accurately with web-scraping, which only reflects a snapshot of the website at one specific moment. Data capture can only capture real-time Airbnb data, and long-term comparative analysis requires data collection in advance and at higher frequencies
+- Data quality is susceptible to changes in the website's structure. Web scraping also only accesses publicly available listings.
+- Data quality depends on user input and does not guarantee accuracy (e.g. bogus listings)
+- Has ethical and legal implications, which will be discussed in the next section
 
 ## 5. What ethical considerations does the use of this data raise?
 
@@ -1020,11 +1020,10 @@ selected_cols = regressiondata_VIF.columns.tolist()
 
 ### Regression Model Results
 
-In analysing the factors affecting the density of each type of crime, we applied ordinary least squares (OLS) to construct a regression model. We found some key predictor variables to be statistically significant. 
+In analysing the factors affecting the density of each type of crime, we applied ordinary least squares (OLS) regression on the relevant predictors. We found some key predictor variables to be statistically significant, most notably within our target variables (All Regression Results can be found in the Appendix):
 
-Looking directly at our target variables, **Entire home/apt** density has a notable effect on property crime incidents (coeff=0.183, p-value<0.05), followed by public order crime (coeff=0.169, p-value<0.05) and finally violent crime (coeff=0.101, p-value<0.05). Meanwhile, **Private room** density interestingly only has a notable and significant effect on public order crime (p-value<0.05) and violent crime (p-value<0.05) 
-
-Despite some signs of heteroscedasticity (see Figure 8), this has already been greatly accounted for after our log transformation)
+- **Entire home/apt** has a notable effect on property crime incidents, followed by public order crime and, finally, violent crime.
+- Meanwhile, **Private room** interestingly only has a notable and significant effect on public order crime and violent crime. 
 
 ```{python}
 models =[]
@@ -1034,43 +1033,19 @@ for i in ['crime_','Property crime_', 'Violent crime_', 'Public Order crime_']:
     OLS = sm.OLS(endog=regressiondata[i+'density_log'], 
                       exog=sm.add_constant(regressiondata[selected_cols]))
     OLSmodel = OLS.fit()
-    print(OLSmodel.summary())
     models.append(OLS)
     results.append(OLSmodel)
-    print('='* 98)
-    print('\n')
+    # print(OLSmodel.summary())
+    # print('='* 98)
+    # print('\n')
 ```
 
-```{python}
-# Residuals vs. Fitted plot (All Crime model)
-fig,axes = plt.subplots(1,3,figsize=(7,3))
-# Plot the residuals vs fitted values on ax1
-axes[0].scatter(results[0].fittedvalues, results[0].resid, alpha = 0.5, s=5)
-axes[0].set_xlabel(f'Fitted values')
-axes[0].set_ylabel('Residual')
-axes[0].set_title(f'Residual vs. Fitted Plot for {models[0].endog_names}',fontsize=7)
+Before we can confirm our hypothesis that there is an impact of increased short-let presence on different types of crime, we will need to first consider the fact that the crime observed in an LSOA affects crime observed in the neighbouring LSOAs results in spatial autocorrelation among the residuals. In fact, Moran's I test stats in Figure 8 show that, as a whole, there is only a slight spatial autocorrelation among the residuals (Coeffs close to 0). Areas where our model might under-predict crime are in red (HH), whereas areas where our model might over-predict crime are in blue (LL). 
 
-# QQplot on ax2
-sm.qqplot(results[0].resid, line='s', markersize=1,ax=axes[1])
-axes[1].set_title(f'QQ Plot for {models[0].endog_names}',fontsize=7)
-        
-# Residual distribution on ax3
-axes[2].hist(results[0].resid, bins=50)
-axes[2].set_xlabel('Residual')
-axes[2].set_ylabel('Frequency')
-axes[2].set_title(f'Residual Distribution for {models[0].endog_names}',fontsize=7)
+Fortunately, the Spatial Error Model, which introduced a spatial component into our original OLS model for All Crimes (see in Appendix), shows that it does not significantly affect the coefficients of our target variables. More specifically:
 
-fig.suptitle('Figure 7: Residual Analysis to confirm OLS assumptions (All Crime)',x=0.5,y=0)
-plt.tight_layout()
-plt.show()
-```
-
-### Accounting for spatial autocorrelation
-
-The fact that the crime observed in an LSOA affects crime observed in the neighbouring LSOAs results in spatial autocorrelation among the residuals. In fact, Moran's I test stats show that as a whole there is only a slight spatial autocorrelation among the residuals (Coeffs close to 0). Areas where our model might under-predict crime are in red (HH), whereas areas where our model might over-predict crime are in blue (LL). Fortunately, the Spatial Error Model below (introducing spatial component into our original OLS model for All Crimes) shows that it does not significantly affect the coefficients of our target variables. More specifically:
-
-- **Private room** coeff=0.043 vs 0.040 originally (slightly stronger effect)
-- **Entire home/apt** coeff=0.1473 vs 0.1645 originally (slightly weaker effect)
+- **Private room** has a slightly stronger effect when spatial errors are added. (coeff=0.043 vs 0.040)
+- **Entire home/apt** has a slightly weaker effect when spatial errors are added. (coeff=0.1473 vs 0.1645)
 
 With this, we can conclude that there is a positive effect of the density of Airbnb listings on crime in a neighbourhood, especially for Entire home/apt listings.
 
@@ -1101,26 +1076,6 @@ for i in range(3):
 fig.suptitle('Figure 8: Residual Morans I - by crime category',x=0.5,y=0.1)
 plt.tight_layout()
 plt.show()
-```
-
-```{python}
-# Spatial Error Model to deal with spatial autocorrelation
-
-X = regressiondata[selected_cols].to_numpy()
-y = regressiondata['crime_density_log'].to_numpy()
-
-# Create a Queen spatial weights matrix
-w = Queen.from_dataframe(lsoa)
-w.transform = 'r'
-
-mod1 = GM_Error_Het(
-    y=y,
-    x=X,
-    w=w,
-    name_y = 'crime_density_log',
-    name_x = regressiondata[selected_cols].columns.tolist()
-)
-print(mod1.summary)
 ```
 
 ### Do short-lets in different areas have a different effect on crime?
@@ -1222,44 +1177,97 @@ Second, there is an impact of shortlets on **violent crime and public order crim
 
 * **a) For Airbnb**, more regulations on tenants' behaviour are needed. For example, while Airbnb currently states the required quiet time for tenants on its booking interface, it does not specify penalties. For tenants reported for taking drugs, disturbing residents, committing crimes against neighbours or listings, or violating Airbnb’s rules, Airbnb shall block the tenant’s Airbnb account based on the severity. Moreover, Airbnb should set up efficient channels to ensure responsive security measures, making it easier for tenants or landlords to file complaints against each other. Especially after receiving safety reports about the listings, Airbnb should consider taking the listings offline (Grind and Shifflett, 2019). 
 * **b) For the government**, there are benefits to strictly regulating shortlets, e.g. enforcing owner-occupied residences, a cap on the number of renters, and neighbour notifications (Vande Bunte, 2014). Moreover, we could refer to San Francisco’s approach, which imposes strict rules on the duration each landlord can rent out a property each year, effectively controlling the number of short-rental properties (Cromarty, 2023), reducing the transient population (Mburu and Helbich, 2016). Besides, a conscious effort should be made to increase police presence in places where Airbnb is particularly dense. 
-* **c) For tenants**, both Airbnb and the government should encourage them to understand and comply with local laws and regulations regarding short-term rentals like the New York State Multiple Dwelling Law (Schneiderman, 2014) through various channels, such as news pop-ups and educational publicity programs. Improving public awareness is essential to reducing crime and creating a safe environment (Felson et al., 2019).
+* **c) For tenants**, both Airbnb and the government should encourage them to understand and comply with local laws and regulations regarding short-term rentals like the New York State Multiple Dwelling Law (Schneiderman, 2014) through various channels, such as news pop-ups and educational publicity programs. Improving public awareness is essential to reducing crime and creating a safe environment (Lemieux and Felson, 2019).
+
+### Appendix: Regression Result Tables
+##### 1. Regression Results
+
+```{python}
+for i in results:
+    print(i.summary())
+    print('='* 98)
+    print('\n')
+```
+
+*Note:* our log transformation has greatly treated the Heteroscedasticity of the variables, although some do remain without greatly affecting the OLS regression results.
+
+```{python}
+# Residuals vs. Fitted plot (All Crime model)
+fig,axes = plt.subplots(1,3,figsize=(7,3))
+# Plot the residuals vs fitted values on ax1
+axes[0].scatter(results[0].fittedvalues, results[0].resid, alpha = 0.5, s=5)
+axes[0].set_xlabel(f'Fitted values')
+axes[0].set_ylabel('Residual')
+axes[0].set_title(f'Residual vs. Fitted Plot for {models[0].endog_names}',fontsize=7)
+
+# QQplot on ax2
+sm.qqplot(results[0].resid, line='s', markersize=1,ax=axes[1])
+axes[1].set_title(f'QQ Plot for {models[0].endog_names}',fontsize=7)
+        
+# Residual distribution on ax3
+axes[2].hist(results[0].resid, bins=50)
+axes[2].set_xlabel('Residual')
+axes[2].set_ylabel('Frequency')
+axes[2].set_title(f'Residual Distribution for {models[0].endog_names}',fontsize=7)
+
+fig.suptitle('Figure 7: Residual Analysis to confirm OLS assumptions (All Crime)',x=0.5,y=0)
+plt.tight_layout()
+plt.show()
+```
+
+##### 2. Spatial Error Model Results
+
+```{python}
+# Spatial Error Model to deal with spatial autocorrelation
+
+X = regressiondata[selected_cols].to_numpy()
+y = regressiondata['crime_density_log'].to_numpy()
+
+# Create a Queen spatial weights matrix
+w = Queen.from_dataframe(lsoa)
+w.transform = 'r'
+
+mod1 = GM_Error_Het(
+    y=y,
+    x=X,
+    w=w,
+    name_y = 'crime_density_log',
+    name_x = regressiondata[selected_cols].columns.tolist()
+)
+print(mod1.summary)
+```
 
 ## References
 
-Barron, K., Kung, E. and Proserpio, D. (2018) Analysis of the impact of Airbnb rentals on community crime rates.
+*About Inside Airbnb* (nd) Available at: http://insideairbnb.com/about/ (Accessed: 5 December 2023).
 
-Cox, M. and Slee, T. (2016) How Airbnb’s data hid the facts in New York City. Inside Airbnb, [Online] Available at: http://insideairbnb.com/research/how-airbnb-hid-the-facts-in-nyc [Accessed 14 December 2023].
+Barron, K., Kung, E. and Proserpio, D. (2018) * The Sharing Economy and Housing
+Affordability: Evidence from Airbnb*. Available at: https://static1.squarespace.com/static/5bb2d447a9ab951efbf6d10a/t/5bea6881562fa7934045a3f0/1542088837594/The+Sharing+Economy+and+Housing+Affordability.pdf (Accessed: 14 December 2023).
 
-Crime and income deprivation, no date. [Online] Available at: [https://trustforlondon.org.uk/data/crime-and-income-deprivation/#:~:text=Overall%2C 52%25 more crimes were,the least income-deprived 10%25](https://trustforlondon.org.uk/data/crime-and-income-deprivation/#:~:text=Overall%2C%2052%25%20more%20crimes%20were,the%20least%20income%2Ddeprived%2010%25) [Accessed 14 December 2023].
+*Consultation on a registration scheme for short-term lets in England* (2023) Available at: https://www.gov.uk/government/consultations/consultation-on-a-registration-scheme-for-short-term-lets-in-england/consultation-on-a-registration-scheme-for-short-term-lets-in-england (Accessed: 5 December 2023).
 
-Consultation on a registration scheme for short-term lets in England (2023) Available at: https://www.gov.uk/government/consultations/consultation-on-a-registration-scheme-for-short-term-lets-in-england/consultation-on-a-registration-scheme-for-short-term-lets-in-england (Accessed: 5 December 2023)
+Cox, M. and Slee, T. (2016) *How Airbnb’s data hid the facts in New York City*. Available at: http://insideairbnb.com/research/how-airbnb-hid-the-facts-in-nyc (Accessed: 14 December 2023).
 
-Cromarty, H. (2023) The growth in short-term lettings (England). Available at: https://researchbriefings.files.parliament.uk/documents/CBP-8395/CBP-8395.pdf (Accessed: 18 December 2023)
+*Crime and income deprivation* (nd) Available at: https://trustforlondon.org.uk/data/crime-and-income-deprivation/#:~:text=Overall%2C%2052%25%20more%20crimes%20were,the%20least%20income%2Ddeprived%2010%25 (Accessed: 14 December 2023).
 
-D’Ignazio, C. and Klein, L.F. (2020) ‘The Numbers Don’t Speak for Themselves’, in Data Feminism. [Online] United States: MIT Libraries Experimental Collections Fund.
+Cromarty, H. (2023) *The growth in short-term lettings (England)*. Available at: https://researchbriefings.files.parliament.uk/documents/CBP-8395/CBP-8395.pdf (Accessed: 18 December 2023).
 
-Flatley, J. (2016) Focus on property crime: year ending March 2016. [Online] Available at: https://www.ons.gov.uk/peoplepopulationandcommunity/crimeandjustice/bulletins/focusonpropertycrime/yearendingmarch2016 [Accessed 14 December 2023].
+D’Ignazio, C. and Klein, L.F. (2020) *The Numbers Don’t Speak for Themselves’*. United States: MIT Libraries Experimental Collections Fund.
 
-Felson, M., Belanger, M., Bichler, G., Bruzdzinski, C., Campbell, G., Fried, C., et al. (2019) Study on how education and outreach can reduce crime and increase public awareness.
+Flatley, J. (2016) *Focus on property crime: year ending March 2016*. Available at: https://www.ons.gov.uk/peoplepopulationandcommunity/crimeandjustice/bulletins/focusonpropertycrime/yearendingmarch2016 (Accessed: 14 December 2023).
 
-Grind, K. and Shifflett, S. (2019) Shooting, sex crime and theft: Airbnb takes halting steps to protect its users. Wall Street Journal, 26 December.
+Grind, K. and Shifflett, S. (2019) ‘Shooting, Sex Crime and Theft: Airbnb Takes Halting Steps to Protect Its Users’, *The Wall Street Journal*. Available at: file:///D:/WeChat/WeChat%20Files/wxid_g4rpvmd2fkyk22/FileStorage/File/2023-12/October%2013,%201996.pdf (Accessed: 17 December 2023).
 
-Hua, N., Li, B. and Zhang, T. (2020) ‘Crime research in hospitality and tourism’. International Journal of Contemporary Hospitality Management, 32(3), pp. 1299–1323. doi: [10.1108/IJCHM-09-2019-0750](https://doi.org/10.1108/IJCHM-09-2019-0750).
+*Inside Airbnb Data Dictionary* (nd) Available at: https://docs.google.com/spreadsheets/d/1iWCNJcSutYqpULSQHlNyGInUvHg2BoUGoNRIGa6Szc4/edit?usp=sharing (Accessed: 17 December 2023).
 
-Inside Airbnb Data Dictionary (no date). https://docs.google.com/spreadsheets/d/1iWCNJcSutYqpULSQHlNyGInUvHg2BoUGoNRIGa6Szc4/edit?usp=sharing.
+Lemieux, A.M. and Felson, M. (2019) ‘Tourist and Visitor Crime’, in Natarajan, M. (ed.) *International and Transnational Crime and Justice*. Cambridge University Press.
 
-Ke, L., O'Brien, D.T. and Heydari, B. (2021) ‘Airbnb and neighborhood crime: The incursion of tourists or the erosion of local social dynamics?’ PLoS ONE, 16(7), pp. e0253315–e0253315. doi: [10.1371/journal.pone.0253315](https://doi.org/10.1371/journal.pone.0253315).
+Mburu, L.W. and Helbich, M. (2016) ‘Crime Risk Estimation with a Commuter-Harmonized Ambient Population’, *Annals of the American Association of Geographers*, 106(4), pp. 804-818.
 
-Mehmed, N.R., no date. ‘Airbnb and the Sharing Economy: Policy Implications for Local Governments’.
+Schneiderman, E. (2014) *Airbnb in the city. New York State Office of the Attorney General*. Available at: http://www.ag.ny.gov/pdfs/Airbnbreport.pdf (Accessed 14 December 2023).
 
-Schneiderman, E. (2014) Airbnb in the city. New York State Office of the Attorney General. [Online] Available at: http://www.ag.ny.gov/pdfs/Airbnbreport.pdf [Accessed 14 December 2023].
+Vande Bunte, M. (2014) *Airbnb verdict in Grand Rapids: 1 room and 2 adults, with a possible exception*. Available at: https://www.mlive.com/news/grand-rapids/2014/08/airbnb_verdict_in_grand_rapids.html (Accessed: 17 December 2023).
 
-Vakhitova, Z.I., Mawby, R.I., Helps, N. and Alston-Knox, C.L. (2023) ‘Tourism and Crime: An Exploratory Study of Burglary From Tourist Accommodation From the Criminal Opportunity Perspective’. Crime & Delinquency, 69(11), pp. 2164–2193. doi: [10.1177/00111287221106962](https://doi.org/10.1177/00111287221106962).
+Xu, Y.H., Kim, J. and Pennington-Gray, L. (2019) ‘The Sharing Economy: A Geographically Weighted Regression Approach to Examine Crime and the Shared Lodging Sector’, *Journal of Travel Research*, 58(7), pp. 1193-1208. Available at: https://journals.sagepub.com/doi/10.1177/0047287518797197 (Accessed: 17 December 2023).
 
-Vande Bunte, M. (2014) Airbnb verdict in Grand Rapids: 1 room and 2 adults, with a possible exception. The Grand Rapids Press. [Online] Available at: http://www.mlive.com/news/grandrapids/index.ssf/2014/08/airbnb_verdict_in_grand_rapids.html [Accessed Date].
-
-Van Holm, E.J. and Monaghan, J. (2021) ‘The relationship of Airbnb to neighborhood calls for service in three cities’. Cities, 116, p. 103241. doi: [10.1016/j.cities.2021.103241](https://doi.org/10.1016/j.cities.2021.103241).
-
-Xu, Y.-H., Kim, J. and Pennington-Gray, L., no date. ‘Explore the Spatial Relationship between Airbnb Rental and Crime’.
-
-Use of Github Copilot AI within Visual Studio Code IDE in parts.
+Occasional use of Github Copilot AI within Visual Studio Code IDE
