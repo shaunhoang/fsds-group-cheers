@@ -68,15 +68,13 @@ Project Github: https://github.com/hanukikanker/fsds-group-cheers
 |Group dynamics: We distributed the tasks among the group but regrouped regularly to discuss our findings and the next steps. | Difficult in collaboration and prioritisation leading up to exam week.|
 
 ## Priorities for Feedback
-- Correctness of our quantitative methods
-- Cleanness of codes
+Correctness of our quantitative methods and cleanness of codes
 
 {{< pagebreak >}}
 
 ```{python}
 import warnings
-warnings.simplefilter(action="ignore", category=FutureWarning)
-warnings.filterwarnings("ignore")
+warnings.filterwarnings('ignore')
 import math
 import pandas as pd
 import geopandas as gpd
@@ -602,8 +600,6 @@ Several potential issues with this method of data collection may challenge the v
 - Second, it may cause data misuse to affect public opinion (D’Ignazio and Klein, 2020). For example, the rental activities of a particular group may be negatively analysed, reinforcing the stereotype of this group and then triggering discrimination and antagonism toward society.
 - Third, power always influences data settings (D’Ignazio and Klein, 2020). Airbnb often leaves out reviews that aren’t friendly to properties and focuses on those that are profitable, such as setting its recommendation algorithm to favour partners.
 
---------------------------------------------
-
 ## 6. With reference to the data, what does an analysis of Listing types suggest about the nature of Airbnb lets in London?
 
 #### Background and research question
@@ -612,14 +608,11 @@ As a short-term rental platform, the mobility of tenants is one of its major cha
 In short, our research question is: Does the type of Airbnb listing have an impact on crime in the neighbourhood? 
 
 #### Data source
-The Airbnb dataset is from the September 2023 updated version provided by Inside Airbnb. The crime dataset is from data.police.uk and has the same time dimension as Airbnb’s. The spatial partitioning dimension in this study is LSOA and is from the Office of National Statistics website. 
-
-#### Defining the data
-In order to examine the nature of short-lets and crime relationship, we want to first establish the parameters to focus on just a subset. As Xu, Pennington-Gray, and Kim (2019) mentioned different types of short-lets have different impacts, we refer to their classification standards defining them as follows (*Data Dictionary*, nd):  
+The Airbnb dataset is from the September 2023 updated version provided by Inside Airbnb. The crime dataset is from data.police.uk and has the same time dimension as Airbnb’s. The spatial partitioning dimension in this study is LSOA and is from the Office of National Statistics website. In order to examine the nature of short-lets and crime relationship, we want to first establish the parameters to focus on just a subset. As Xu, Pennington-Gray, and Kim (2019) mentioned different types of short-lets have different impacts, we refer to their classification standards defining them as follows (*Data Dictionary*, nd):  
 - _Entire home:_ Tenants can enjoy an entire whole listing.  
 - _Private room:_ The tenant has a private bedroom but may need to share some space with others such as the kitchen.  
 
-We **excluded Hotel rooms** (listings by actual hotels and hostels) since they are not the subject of this research and are also few in numbers. We also **exclude Shared rooms** due to thier limited number in London. Lastly, we trimmed listing price outliers to filter out bogus listings. Figure 1a and 1b shows the listing price distribution of different room types, before and after filtering.
+We **excluded Hotel rooms** (listings by actual hotels and hostels) since they are not the subject of this research and are also few in numbers. We also **exclude Shared rooms** due to thier limited number in London. Lastly, we trimmed listing price outliers to filter out bogus listings. Figure 1 shows the listing price distribution of different room types before filtering.
 
 ```{python}
 # Transform price to float
@@ -643,7 +636,7 @@ fig,ax1 = plt.subplots(figsize=(7,3))
 for color,r in zip(palette,room):
     ax1.hist(listings1[listings1['room_type']==r].price, bins=50, alpha=1, label=r,color=color)
 ax1.legend(loc='upper right')
-fig.suptitle('Figure 1a: Histogram of Airbnb listing price by room type - Sept 2023',x=0.5,y=-0.01)
+fig.suptitle('Figure 1: Histogram of Airbnb listing price by room type - Sept 2023',x=0.5,y=-0.01)
 plt.tight_layout()
 plt.show()
 ```
@@ -701,7 +694,7 @@ fig,ax = plt.subplots(1,3,figsize=[8,3],sharey=True)
 for idx,r in enumerate(crime.Category.unique()):
     ax[idx].hist(crime[crime['Category']==r].groupby('LSOA code').count().Category, bins=100, alpha=0.5, label=r)
     ax[idx].legend(loc='upper right')
-fig.suptitle('Figure 2a: Histogram of each crime category (LSOA level)',x=0.5,y=0)
+fig.suptitle('Figure 2: Histogram of each crime category (LSOA level)',x=0.5,y=0)
 plt.show()
 ```
 
@@ -783,7 +776,7 @@ for ax in fig.get_axes():
     ax.set_ylim([155000, 202000])
 
 plt.tight_layout()
-fig.suptitle('Figure 3: Density by LSOA',x=0.5,y=0)
+fig.suptitle('Figure 3: Shortlet and crime density by LSOA',x=0.5,y=0)
 plt.show()
 ```
 
@@ -879,25 +872,25 @@ plt.tight_layout()
 plt.show()
 ```
 
---------------------------------------------
-
 ## 7. Shortlet vs Crime and Policy recommendations
-### Variables
 
-We will perform a regression analysis to determine whether different shortlet types has an effect on crime overall and also different crime categories, controlling for other relevant sociodemographic variables as much as possible. The chosen variables (calculated as proportions) are:
+#### Preparing Regression Data
 
+We will perform a regression analysis to determine whether different shortlet types has an effect on crime overall and also different crime categories, controlling for other relevant sociodemographic variables as much as possible. These control variables directly or indirectly provide a level of deprivation, which serves as a significant socioeconomic indicator linked to crime patterns (*Crimes recorded by neighbourhood income deprivation decile in London*, 2022). 
+
+The target dependent variables are :
+- proportion of all crime, property crime, public order crime, and violent crime, over LSOA population
+
+The target indendpendent variables (predictors) are:
+- proportion of Private and Entire home listings over total household
+
+The control independent variables are:
 - population density,
 - proportion of unemployed people among 16+
 - proportion of young people (15-24 ages),
 - proportion of household with a deprivation index of 3+
 - proportion of people with qualification level 3 or higher
-- proportion of tenanted household over all households 
-
-These control variables directly or indirectly provide a level of deprivation, which serves as a significant socioeconomic indicator linked to crime patterns (*Crimes recorded by neighbourhood income deprivation decile in London*, 2022). Meanwhile, for our target independent and dependent variables, we have derived:
-
-- proportion of Private and Entire home listings over total household, and
-- proportion of all crime, property crime, public order crime, and violent crime over LSOA population
-### Preparing Regression Data
+- proportion of tenanted household over all households
 
 Since we are using a simple linear regression to model this relationship to test our hypothesis, we must make sure the variables satisfy basic distribution requirements. Therefore we performed log transformations for select variable. Figure 7 shows the variables post-transformation.
 
@@ -972,7 +965,7 @@ def normal_from_dist(series):  #define function name and required arguments (in 
 #     sns.despine()
 # for ax in axflat[-2:]:
 #     ax.axis('off')
-# fig.suptitle('Figure 7a: Regression dependent and indenpendent variables (pre-transformation)',x=0.5,y=0)
+# fig.suptitle('Figure 6: Regression dependent and indenpendent variables (pre-transformation)',x=0.5,y=0)
 # plt.tight_layout()
 # plt.show()
 ```
@@ -1018,9 +1011,9 @@ regressiondata_VIF = drop_column_using_vif_(regressiondata_VIF)
 selected_cols = regressiondata_VIF.columns.tolist()
 ```
 
-### Regression Model Results
+#### Regression Results
 
-In analysing the factors affecting the density of each type of crime, we applied ordinary least squares (OLS) regression on the relevant predictors. We found some key predictor variables to be statistically significant, most notably within our target variables (All Regression Results can be found in the Appendix):
+We found some key predictor variables to be statistically significant, most notably within our target variables (All Regression Results can be found in the Appendix):
 
 - **Entire home/apt** has a notable effect on property crime incidents, followed by public order crime and, finally, violent crime.
 - Meanwhile, **Private room** interestingly only has a notable and significant effect on public order crime and violent crime. 
@@ -1040,7 +1033,7 @@ for i in ['crime_','Property crime_', 'Violent crime_', 'Public Order crime_']:
     # print('\n')
 ```
 
-Before we can confirm our hypothesis that there is an impact of increased short-let presence on different types of crime, we will need to first consider the fact that the crime observed in an LSOA affects crime observed in the neighbouring LSOAs results in spatial autocorrelation among the residuals. In fact, Moran's I test stats in Figure 8 show that, as a whole, there is only a slight spatial autocorrelation among the residuals (Coeffs close to 0). Areas where our model might under-predict crime are in red (HH), whereas areas where our model might over-predict crime are in blue (LL). 
+Before we can confirm our hypothesis that there is an impact of increased short-let presence on different types of crime, we will need to first consider the fact that the crime observed in an LSOA affects crime observed in the neighbouring LSOAs results in spatial autocorrelation among the residuals. In fact, Moran's I test stats in Figure 7 show that, as a whole, there is only a slight spatial autocorrelation among the residuals (Coeffs close to 0). Areas where our model might under-predict crime are in red (HH), whereas areas where our model might over-predict crime are in blue (LL). 
 
 Fortunately, the Spatial Error Model, which introduced a spatial component into our original OLS model for All Crimes (see in Appendix), shows that it does not significantly affect the coefficients of our target variables. More specifically:
 
@@ -1073,12 +1066,12 @@ for i in range(3):
     lisa_cluster(moran_loc, lsoa, p=0.05,ax=ax[i],legend=False)
     ax[i].set_title(f'Residuals Local Moran\'s I - {models[i+1].endog_names}\nGlobal stat = {moran.I:.2f}',fontsize=5)
 
-fig.suptitle('Figure 8: Residual Morans I - by crime category',x=0.5,y=0.1)
+fig.suptitle('Figure 7: Residual Morans I - by crime category',x=0.5,y=0.1)
 plt.tight_layout()
 plt.show()
 ```
 
-### Do short-lets in different areas have a different effect on crime?
+#### Do short-lets in different areas have a different effect on crime?
 
 Using a Geographically Weighted Regression, we can further visualise where precisely the effect of short lets on crime is statistically significant. The results show that:
 
@@ -1164,11 +1157,11 @@ for i in range(len(type)):
     axes[i,0].set_title(f'({i+1}a) {type[i]} vs. Crime, significant coeffs', fontsize=8)
     axes[i,1].set_title(f'({i+1}b) {type[i]} vs. Property Crime, significant coeffs', fontsize=8)
 plt.tight_layout()
-fig.suptitle('Figure 9: Geographically weighted effect of short-lets on crime',x=0.5,y=0)
+fig.suptitle('Figure 8: Geographically weighted effect of short-lets on crime',x=0.5,y=0)
 plt.show()
 ```
 
-### Reflection and Recommendations
+#### Reflection and Recommendations
 After the public consultation on the policy in 2022, the government will require landlords to register and will conduct random checks on some listings or require landlords to upload legal documents to prove the safety of their listings (Consultation on a registration scheme for short-term lets in England, 2023). While this will allow for better listing management and tenants' safety, we recommend further actions based on our analysis thus far:
 
 First, for **property crime**, *entire home* shortlets are at particular risk, especially in central London, and *private room* listings in East London, whether shortlet tenants are committing theft or disturbances against neighbours or being targeted. We suggest that Airbnb should strengthen the background checks of tenants (Barron, Kung, and Proserpio, 2018) and choose whether to ban the use of the Airbnb platform according to the number of tenants with criminal property records. If permitted, Airbnb needs to provide relevant information to the landlord and keep records synchronised with local police departments. In the property security protection of tenants, Airbnb needs to strengthen the door lock management, such as encouraging the landlord to replace the smart door lock as much as possible and allowing each group of tenants to reset their password.
@@ -1179,13 +1172,19 @@ Second, there is an impact of shortlets on **violent crime and public order crim
 * **b) For the government**, there are benefits to strictly regulating shortlets, e.g. enforcing owner-occupied residences, a cap on the number of renters, and neighbour notifications (Vande Bunte, 2014). Moreover, we could refer to San Francisco’s approach, which imposes strict rules on the duration each landlord can rent out a property each year, effectively controlling the number of short-rental properties (Cromarty, 2023), reducing the transient population (Mburu and Helbich, 2016). Besides, a conscious effort should be made to increase police presence in places where Airbnb is particularly dense. 
 * **c) For tenants**, both Airbnb and the government should encourage them to understand and comply with local laws and regulations regarding short-term rentals like the New York State Multiple Dwelling Law (Schneiderman, 2014) through various channels, such as news pop-ups and educational publicity programs. Improving public awareness is essential to reducing crime and creating a safe environment (Lemieux and Felson, 2019).
 
-### Appendix: Regression Result Tables
-##### 1. Regression Results
+## Appendix:
+
+#### 1. OLS Regression Results
+
+--------------------------------------------
+
+OLS Regression results for each of the four dependent variables:
 
 ```{python}
+# Regression Results
+
 for i in results:
     print(i.summary())
-    print('='* 98)
     print('\n')
 ```
 
@@ -1193,7 +1192,7 @@ for i in results:
 
 ```{python}
 # Residuals vs. Fitted plot (All Crime model)
-fig,axes = plt.subplots(1,3,figsize=(7,3))
+fig,axes = plt.subplots(1,3,figsize=(7,2.5))
 # Plot the residuals vs fitted values on ax1
 axes[0].scatter(results[0].fittedvalues, results[0].resid, alpha = 0.5, s=5)
 axes[0].set_xlabel(f'Fitted values')
@@ -1210,12 +1209,12 @@ axes[2].set_xlabel('Residual')
 axes[2].set_ylabel('Frequency')
 axes[2].set_title(f'Residual Distribution for {models[0].endog_names}',fontsize=7)
 
-fig.suptitle('Figure 7: Residual Analysis to confirm OLS assumptions (All Crime)',x=0.5,y=0)
+fig.suptitle('Figure 9: Residual Analysis to confirm OLS assumptions (All Crime)',x=0.5,y=0)
 plt.tight_layout()
 plt.show()
 ```
 
-##### 2. Spatial Error Model Results
+#### 2. Spatial Error Model Results
 
 ```{python}
 # Spatial Error Model to deal with spatial autocorrelation
@@ -1256,7 +1255,7 @@ D’Ignazio, C. and Klein, L.F. (2020) *The Numbers Don’t Speak for Themselves
 
 Flatley, J. (2016) *Focus on property crime: year ending March 2016*. Available at: https://www.ons.gov.uk/peoplepopulationandcommunity/crimeandjustice/bulletins/focusonpropertycrime/yearendingmarch2016 (Accessed: 14 December 2023).
 
-Grind, K. and Shifflett, S. (2019) ‘Shooting, Sex Crime and Theft: Airbnb Takes Halting Steps to Protect Its Users’, *The Wall Street Journal*. Available at: file:///D:/WeChat/WeChat%20Files/wxid_g4rpvmd2fkyk22/FileStorage/File/2023-12/October%2013,%201996.pdf (Accessed: 17 December 2023).
+Grind, K. and Shifflett, S. (2019) ‘Shooting, Sex Crime and Theft: Airbnb Takes Halting Steps to Protect Its Users’, *The Wall Street Journal*. (Accessed: 17 December 2023).
 
 *Inside Airbnb Data Dictionary* (nd) Available at: https://docs.google.com/spreadsheets/d/1iWCNJcSutYqpULSQHlNyGInUvHg2BoUGoNRIGa6Szc4/edit?usp=sharing (Accessed: 17 December 2023).
 
