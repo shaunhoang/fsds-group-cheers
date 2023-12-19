@@ -74,9 +74,9 @@ Project Github: https://github.com/hanukikanker/fsds-group-cheers
 {{< pagebreak >}}
 
 ```{python}
-# warnings.simplefilter(action="ignore", category=FutureWarning)
 import warnings
-warnings.filterwarnings("ignore")
+warnings.simplefilter(action="ignore", category=FutureWarning)
+# warnings.filterwarnings("ignore")
 import math
 import pandas as pd
 import geopandas as gpd
@@ -517,7 +517,7 @@ def drop_column_using_vif_(df, thresh=5):
 
 ```{python}
 # Define paths for download
-ddir = os.path.join("data", "geo")  # destination directory
+ddir = os.path.join("data","geo")  # destination directory
 spath = "https://github.com/jreades/i2p/blob/master/data/src/"  # source path
 spath_db = "https://www.dropbox.com/scl/fi/"  # source path for dropbox
 host = "http://orca.casa.ucl.ac.uk"
@@ -872,7 +872,7 @@ img = cache_data("https://www.dropbox.com/scl/fi/e8epq7uc943zvjz2es6si/newplot-1
 ```{python}
 plt.figure(figsize=(7,15))
 plt.title('Figure 5: Bivariate Map of Airbnb and Crime in London*\n(Interactive version available on the HTML output)',x=0.5,y=-0.1)
-image = mpimg.imread(os.path.join("data","geo","newplot-1.png"))
+image = mpimg.imread(os.path.join(ddir,"newplot-1.png"))
 plt.imshow(image)
 plt.axis('off')
 plt.tight_layout()
@@ -884,7 +884,7 @@ plt.show()
 ## 7. Shortlet vs Crime and Policy recommendations
 ### Variables
 
-We will perform a regression analysis to determine whether different shortlet has an effect on crime, controlling for other relevant sociodemographic variables as much as possible. The chosen variables (calculated as proportions) are:
+We will perform a regression analysis to determine whether different shortlet types has an effect on crime overall and also different crime categories, controlling for other relevant sociodemographic variables as much as possible. The chosen variables (calculated as proportions) are:
 
 - population density,
 - proportion of unemployed people among 16+
@@ -893,10 +893,10 @@ We will perform a regression analysis to determine whether different shortlet ha
 - proportion of people with qualification level 3 or higher
 - proportion of tenanted household over all households 
 
-These control variables directly or indirectly provide a level of deprivation, which serves as a significant socioeconomic indicator linked to crime patterns (*Crimes recorded by neighbourhood income deprivation decile in London*, 2022). Meanwhile, for our target independent and dependent variables, we will also derive:
+These control variables directly or indirectly provide a level of deprivation, which serves as a significant socioeconomic indicator linked to crime patterns (*Crimes recorded by neighbourhood income deprivation decile in London*, 2022). Meanwhile, for our target independent and dependent variables, we have derived:
 
 - proportion of Private and Entire home listings over total household, and
-- proportion of property crime, public order crime, and violent crime over LSOA population
+- proportion of all crime, property crime, public order crime, and violent crime over LSOA population
 ### Preparing Regression Data
 
 Since we are using a simple linear regression to model this relationship to test our hypothesis, we must make sure the variables satisfy basic distribution requirements. Therefore we performed log transformations for select variable. Figure 7 shows the variables post-transformation.
