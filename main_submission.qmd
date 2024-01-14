@@ -73,36 +73,40 @@ Correctness of our quantitative methods and cleanness of codes
 {{< pagebreak >}}
 
 ```{python}
+#| jupyter: {source_hidden: true}
 import warnings
-warnings.filterwarnings('ignore')
-import math
-import pandas as pd
-import geopandas as gpd
-import numpy as np
-import seaborn as sns
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-from matplotlib import image as mpimg
-import plotly.graph_objs as go
-from requests import get
-from spreg import GM_Error_Het
-from libpysal.weights import Queen
-import libpysal as ps
-from mgwr.gwr import GWR, MGWR
-from mgwr.sel_bw import Sel_BW
+
+warnings.filterwarnings("ignore")
 import json
+import math
 import os
 from urllib.parse import urlparse
-import statsmodels.api as sm
+
+import geopandas as gpd
+import libpysal as ps
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import plotly.graph_objs as go
 import pysal
-from esda.moran import Moran
-from esda.moran import Moran_Local
+import seaborn as sns
+import statsmodels.api as sm
+from esda.moran import Moran, Moran_Local
+from libpysal.weights import Queen
+from matplotlib import image as mpimg
+from mgwr.gwr import GWR, MGWR
+from mgwr.sel_bw import Sel_BW
+from requests import get
 from splot.esda import lisa_cluster
+from spreg import GM_Error_Het
 ```
 
 ```{python}
+#| jupyter: {source_hidden: true}
 # Function to download file from remote
 # Adapted from CASA0013
+
 
 def cache_data(src: str, dest: str) -> str:
     """
@@ -131,11 +135,14 @@ def cache_data(src: str, dest: str) -> str:
 ```
 
 ```{python}
+#| jupyter: {source_hidden: true}
 # Function to create bivariate chropleth map
 # Adapted from: https://www.kaggle.com/code/yotkadata/bivariate-choropleth-map-using-plotly
 """
 Function to set default variables
 """
+
+
 def conf_defaults():
     # Define some variables for later use
     conf = {
@@ -474,38 +481,45 @@ color_sets = {
 ```
 
 ```{python}
+#| jupyter: {source_hidden: true}
 # calculating VIF
 # This function is adjusted from: https://stackoverflow.com/a/51329496/4667568
-from statsmodels.stats.outliers_influence import variance_inflation_factor 
+from statsmodels.stats.outliers_influence import variance_inflation_factor
 from statsmodels.tools.tools import add_constant
 
+
 def drop_column_using_vif_(df, thresh=5):
-    '''
+    """
     Calculates VIF each feature in a pandas dataframe, and repeatedly drop the columns with the highest VIF
     A constant must be added to variance_inflation_factor or the results will be incorrect
 
     :param df: the pandas dataframe containing only the predictor features, not the response variable
     :param thresh: (default 5) the threshould VIF value. If the VIF of a variable is greater than thresh, it should be removed from the dataframe
     :return: dataframe with multicollinear features removed
-    '''
+    """
     while True:
         # adding a constatnt item to the data. add_constant is a function from statsmodels (see the import above)
         df_with_const = add_constant(df)
 
-        vif_df = pd.Series([variance_inflation_factor(df_with_const.values, i) 
-               for i in range(df_with_const.shape[1])], name= "VIF",
-              index=df_with_const.columns).to_frame()
+        vif_df = pd.Series(
+            [
+                variance_inflation_factor(df_with_const.values, i)
+                for i in range(df_with_const.shape[1])
+            ],
+            name="VIF",
+            index=df_with_const.columns,
+        ).to_frame()
 
         # drop the const
-        vif_df = vif_df.drop('const')
-        
+        vif_df = vif_df.drop("const")
+
         # if the largest VIF is above the thresh, remove a variable with the largest VIF
         # If there are multiple variabels with VIF>thresh, only one of them is removed. This is because we want to keep as many variables as possible
         if vif_df.VIF.max() > thresh:
             # If there are multiple variables with the maximum VIF, choose the first one
             index_to_drop = vif_df.index[vif_df.VIF == vif_df.VIF.max()].tolist()[0]
-            print('Dropping: {}'.format(index_to_drop))
-            df = df.drop(columns = index_to_drop)
+            print("Dropping: {}".format(index_to_drop))
+            df = df.drop(columns=index_to_drop)
         else:
             # No VIF is above threshold. Exit the loop
             break
@@ -514,8 +528,9 @@ def drop_column_using_vif_(df, thresh=5):
 ```
 
 ```{python}
+#| jupyter: {source_hidden: true}
 # Define paths for download
-ddir = os.path.join("data","geo")  # destination directory
+ddir = os.path.join("data", "geo")  # destination directory
 spath = "https://github.com/jreades/i2p/blob/master/data/src/"  # source path
 spath_db = "https://www.dropbox.com/scl/fi/"  # source path for dropbox
 host = "http://orca.casa.ucl.ac.uk"
@@ -524,24 +539,43 @@ path = "~jreades/data"
 
 ```{python}
 #| output: false
+#| jupyter: {source_hidden: true}
 
 # Read in airbnb, crime, and lsoa stats files. https://www.dropbox.com/home/casa/casa_fsds_cheers.
 # Some files have been cleaned, cropped, turned into gdf and hosted on dropbox to save time later on. See cleandata.ipynb in the Github repo for more details on how these files were created.
 # # [PATIENCE] Takes about 4 minutes to download and read in the data
 
 # Crime data filtered for September 2023, within Greater London
-crime = gpd.read_file(cache_data(spath_db + "ewc9skqcfr930whzcjadd/crime.gpkg?rlkey=xjve2mmmmt5h3allsa2zpabya&dl=1",ddir) , driver="gpkg", low_memory=False)
+crime = gpd.read_file(
+    cache_data(
+        spath_db
+        + "ewc9skqcfr930whzcjadd/crime.gpkg?rlkey=xjve2mmmmt5h3allsa2zpabya&dl=1",
+        ddir,
+    ),
+    driver="gpkg",
+    low_memory=False,
+)
 
 # Airbnb listing data scraped on September 2023, filtered within Greater London
-listings = gpd.read_parquet(cache_data(f"{host}/{path}/2023-09-06-listings.geoparquet", ddir))
+listings = gpd.read_parquet(
+    cache_data(f"{host}/{path}/2023-09-06-listings.geoparquet", ddir)
+)
 listings = listings.to_crs(epsg=27700)
 
 # LSOA (London) data concatenated from multiple datasets from London Datastore,
-lsoa_stat = pd.read_csv(cache_data(spath_db + "8zc0g09rlf1yhj6j7yn6n/lsoa_full.csv?rlkey=yopr4hv017rr3iv4e2zus0ifz&dl=1",ddir), low_memory=False)
+lsoa_stat = pd.read_csv(
+    cache_data(
+        spath_db
+        + "8zc0g09rlf1yhj6j7yn6n/lsoa_full.csv?rlkey=yopr4hv017rr3iv4e2zus0ifz&dl=1",
+        ddir,
+    ),
+    low_memory=False,
+)
 ```
 
 ```{python}
 #| output: false
+#| jupyter: {source_hidden: true}
 
 # Read in shapefiles (2 mins)
 water = gpd.read_file(cache_data(spath + "Water.gpkg?raw=true", ddir))
@@ -558,12 +592,13 @@ lsoa = gpd.read_file(
 
 ```{python}
 #| output: false
+#| jupyter: {source_hidden: true}
 
 # Check that all geo dataframes that they are in EPSG:27700
 crs = []
-for n in [water,green,boros,lsoa,crime,listings]:
+for n in [water, green, boros, lsoa, crime, listings]:
     crs.append(n.crs)
-print(f'Geo dataframes are in {set(crs)}')
+print(f"Geo dataframes are in {set(crs)}")
 ```
 
 # Response to Questions
@@ -624,7 +659,9 @@ if listings.price.dtype == "O":
 q1 = listings.price.quantile(0.25)
 q3 = listings.price.quantile(0.75)
 iqr = q3 - q1
-listings1 = listings[(listings.price >= q1 - 1.5 * iqr) & (listings.price <= q3 + 1.5 * iqr)]
+listings1 = listings[
+    (listings.price >= q1 - 1.5 * iqr) & (listings.price <= q3 + 1.5 * iqr)
+]
 ```
 
 ```{python}
@@ -632,11 +669,21 @@ listings1 = listings[(listings.price >= q1 - 1.5 * iqr) & (listings.price <= q3 
 room = listings.room_type.unique()
 palette = sns.color_palette()
 
-fig,ax1 = plt.subplots(figsize=(7,3))
-for color,r in zip(palette,room):
-    ax1.hist(listings1[listings1['room_type']==r].price, bins=50, alpha=1, label=r,color=color)
-ax1.legend(loc='upper right')
-fig.suptitle('Figure 1: Histogram of Airbnb listing price by room type - Sept 2023',x=0.5,y=-0.01)
+fig, ax1 = plt.subplots(figsize=(7, 3))
+for color, r in zip(palette, room):
+    ax1.hist(
+        listings1[listings1["room_type"] == r].price,
+        bins=50,
+        alpha=1,
+        label=r,
+        color=color,
+    )
+ax1.legend(loc="upper right")
+fig.suptitle(
+    "Figure 1: Histogram of Airbnb listing price by room type - Sept 2023",
+    x=0.5,
+    y=-0.01,
+)
 plt.tight_layout()
 plt.show()
 ```
@@ -644,12 +691,12 @@ plt.show()
 ```{python}
 # Clean listings data: outliers, and missing values, split into 2 types by property type
 # Omit Hotel rooms and Shared rooms
-listings2 = listings1[~listings1["room_type"].isin(["Hotel room","Shared room"])]
+listings2 = listings1[~listings1["room_type"].isin(["Hotel room", "Shared room"])]
 ```
 
 ```{python}
 # Write it back to original dataframe
-listings=listings2.copy()
+listings = listings2.copy()
 ```
 
 As for crime data, as we wanted to make recommendations more specific to different categories of crime, we classified crime into the following types (Xu, Pennington-Gray and Kim, 2019; Flatley, 2016):
@@ -690,11 +737,16 @@ crime["Category"] = np.where(
 
 ```{python}
 # Plot them
-fig,ax = plt.subplots(1,3,figsize=[8,3],sharey=True)
-for idx,r in enumerate(crime.Category.unique()):
-    ax[idx].hist(crime[crime['Category']==r].groupby('LSOA code').count().Category, bins=100, alpha=0.5, label=r)
-    ax[idx].legend(loc='upper right')
-fig.suptitle('Figure 2: Histogram of each crime category (LSOA level)',x=0.5,y=0)
+fig, ax = plt.subplots(1, 3, figsize=[8, 3], sharey=True)
+for idx, r in enumerate(crime.Category.unique()):
+    ax[idx].hist(
+        crime[crime["Category"] == r].groupby("LSOA code").count().Category,
+        bins=100,
+        alpha=0.5,
+        label=r,
+    )
+    ax[idx].legend(loc="upper right")
+fig.suptitle("Figure 2: Histogram of each crime category (LSOA level)", x=0.5, y=0)
 plt.show()
 ```
 
@@ -757,26 +809,26 @@ lsoa_merge.plot(
 lsoa_merge.plot(ax=axes[1, 0], column="Property crime_count", cmap="Reds", alpha=0.9)
 lsoa_merge.plot(ax=axes[2, 0], column="Violent crime_count", cmap="Reds", alpha=0.9)
 
-axes[0, 0].set_title("Public Order crime by LSOA",fontsize=8)
-axes[1, 0].set_title("Property crime by LSOA",fontsize=8)
-axes[2, 0].set_title("Violent crime by LSOA",fontsize=8)
+axes[0, 0].set_title("Public Order crime by LSOA", fontsize=8)
+axes[1, 0].set_title("Property crime by LSOA", fontsize=8)
+axes[2, 0].set_title("Violent crime by LSOA", fontsize=8)
 
-axes[0, 1].axis('off')
+axes[0, 1].axis("off")
 lsoa_merge.plot(ax=axes[1, 1], column="Private room_count", cmap="Blues", alpha=0.9)
 lsoa_merge.plot(ax=axes[2, 1], column="Entire home/apt_count", cmap="Blues", alpha=0.9)
 
-axes[1, 1].set_title("Private room by LSOA",fontsize=8)
-axes[2, 1].set_title("Entire home/apt by LSOA",fontsize=8)
+axes[1, 1].set_title("Private room by LSOA", fontsize=8)
+axes[2, 1].set_title("Entire home/apt by LSOA", fontsize=8)
 
 for ax in fig.get_axes():
-    ax.axis('off')
+    ax.axis("off")
     ax.axes.xaxis.set_visible(False)
     ax.axes.yaxis.set_visible(False)
     ax.set_xlim([501000, 563000])
     ax.set_ylim([155000, 202000])
 
 plt.tight_layout()
-fig.suptitle('Figure 3: Shortlet and crime density by LSOA',x=0.5,y=0)
+fig.suptitle("Figure 3: Shortlet and crime density by LSOA", x=0.5, y=0)
 plt.show()
 ```
 
@@ -788,12 +840,12 @@ Zooming in to compare these variables among LSOAs via a correlation matrix with 
 
 ```{python}
 # Make the correlation matrix
-cols = [col for col in lsoa_merge.columns if 'count' in col]
+cols = [col for col in lsoa_merge.columns if "count" in col]
 
 lsoa_merge_sub1 = lsoa_merge[cols]
 lsoa_merge_sub1_comatrix = lsoa_merge_sub1.corr()
 # plot the correlation matrix plot
-fig, axes = plt.subplots(figsize=(7,5))
+fig, axes = plt.subplots(figsize=(7, 5))
 sns.heatmap(
     lsoa_merge_sub1_comatrix,
     cmap="viridis",
@@ -805,7 +857,9 @@ sns.heatmap(
 )
 axes.tick_params(labelsize=9)
 
-fig.suptitle('Figure 4: Correlation Matrix - Listing type vs Crime category',x=0.5,y=-0.03)
+fig.suptitle(
+    "Figure 4: Correlation Matrix - Listing type vs Crime category", x=0.5, y=-0.03
+)
 plt.tight_layout()
 plt.show()
 ```
@@ -827,7 +881,7 @@ for i in range(len(geojson["features"])):
 ```{python}
 # Load conf defaults and override some variables for our London map
 conf = conf_defaults()
-conf["plot_title"] = "Airbnb and Crime in London, Sep 2023"
+conf["plot_title"] = "Short-lets and Crime in London 2023"
 conf["hover_x_label"] = "Crime"  # Label to appear on hover
 conf["hover_y_label"] = "AirBnb listings"  # Label to appear on hover
 conf["width"] = 700
@@ -859,15 +913,22 @@ fig.show()
 
 ```{python}
 #| output: false
-img = cache_data("https://www.dropbox.com/scl/fi/e8epq7uc943zvjz2es6si/newplot-1.png?rlkey=rlgydu69vjzuxnuvch8ptu2y1&dl=1",ddir)
+img = cache_data(
+    "https://www.dropbox.com/scl/fi/e8epq7uc943zvjz2es6si/newplot-1.png?rlkey=rlgydu69vjzuxnuvch8ptu2y1&dl=1",
+    ddir,
+)
 ```
 
 ```{python}
-plt.figure(figsize=(7,15))
-plt.title('Figure 5: Bivariate Map of Airbnb and Crime in London*\n(Interactive version available on the HTML output)',x=0.5,y=-0.1)
-image = mpimg.imread(os.path.join(ddir,"newplot-1.png"))
+plt.figure(figsize=(7, 15))
+plt.title(
+    "Figure 5: Bivariate Map of Airbnb and Crime in London*\n(Interactive version available on the HTML output)",
+    x=0.5,
+    y=-0.1,
+)
+image = mpimg.imread(os.path.join(ddir, "newplot-1.png"))
 plt.imshow(image)
-plt.axis('off')
+plt.axis("off")
 plt.tight_layout()
 plt.show()
 ```
@@ -897,57 +958,99 @@ Since we are using a simple linear regression to model this relationship to test
 ```{python}
 # Select columns and calculate density for key variables
 lsoa_stat_sel = lsoa_stat.copy()
-lsoa_stat_sel['deprived_3+_dimension_density'] = (lsoa_stat['3 dimensions'] + lsoa_stat['4 dimensions'])/lsoa_stat['All Households']
-lsoa_stat_sel['unemployed_density'] = (lsoa_stat['Economically active: Unemployed'])/lsoa_stat['All usual residents aged 16 or over']
-lsoa_stat_sel['young_people_density'] = (lsoa_stat['Aged 15 '] + lsoa_stat['Aged 16 to 17'] + lsoa_stat['Aged 18 to 19'] + lsoa_stat['Aged 20 to 24'])/lsoa_stat['All usual residents']
-lsoa_stat_sel['qual_level_3+_density'] = (lsoa_stat['Level 3'] + lsoa_stat['Level 4+'] )/lsoa_stat['Usual residents aged 16+']
-lsoa_stat_sel['social_rent_density'] = (lsoa_stat['Other social rented'] + lsoa_stat['Rented from Local Authority'] )/lsoa_stat['All Households']
+lsoa_stat_sel["deprived_3+_dimension_density"] = (
+    lsoa_stat["3 dimensions"] + lsoa_stat["4 dimensions"]
+) / lsoa_stat["All Households"]
+lsoa_stat_sel["unemployed_density"] = (
+    lsoa_stat["Economically active: Unemployed"]
+) / lsoa_stat["All usual residents aged 16 or over"]
+lsoa_stat_sel["young_people_density"] = (
+    lsoa_stat["Aged 15 "]
+    + lsoa_stat["Aged 16 to 17"]
+    + lsoa_stat["Aged 18 to 19"]
+    + lsoa_stat["Aged 20 to 24"]
+) / lsoa_stat["All usual residents"]
+lsoa_stat_sel["qual_level_3+_density"] = (
+    lsoa_stat["Level 3"] + lsoa_stat["Level 4+"]
+) / lsoa_stat["Usual residents aged 16+"]
+lsoa_stat_sel["social_rent_density"] = (
+    lsoa_stat["Other social rented"] + lsoa_stat["Rented from Local Authority"]
+) / lsoa_stat["All Households"]
 ```
 
 ```{python}
 # Merge selected columns from lsoa_stat_sel to lsoa_merge by LSOA21CD
-lsoa_merge1 = lsoa_merge.merge(lsoa_stat_sel[['LSOA code',
-                                                  'deprived_3+_dimension_density',
-                                                  'unemployed_density',
-                                                  'young_people_density',
-                                                  'qual_level_3+_density',
-                                                  'social_rent_density',
-                                                  'All Households',
-                                                  'All usual residents aged 16 or over',
-                                                  'All usual residents']], 
-                               left_on = 'LSOA21CD',right_on='LSOA code', how='left').drop(columns=['LSOA code'])
+lsoa_merge1 = lsoa_merge.merge(
+    lsoa_stat_sel[
+        [
+            "LSOA code",
+            "deprived_3+_dimension_density",
+            "unemployed_density",
+            "young_people_density",
+            "qual_level_3+_density",
+            "social_rent_density",
+            "All Households",
+            "All usual residents aged 16 or over",
+            "All usual residents",
+        ]
+    ],
+    left_on="LSOA21CD",
+    right_on="LSOA code",
+    how="left",
+).drop(columns=["LSOA code"])
 ```
 
 ```{python}
 # Add density for each column in lsoa_merge1 nased on All Households and All usual residents
 # Select columns and calculate density
-lsoa_merge1['crime_density'] = lsoa_merge1['crime_count']/lsoa_merge1['All usual residents']
-lsoa_merge1['listing_density'] = lsoa_merge1['listing_count']/lsoa_merge1['All Households']
-lsoa_merge1['Private room_density'] = lsoa_merge1['Private room_count']/lsoa_merge1['All Households']
-lsoa_merge1['Entire home/apt_density'] = lsoa_merge1['Entire home/apt_count']/lsoa_merge1['All Households']
-lsoa_merge1['Public Order crime_density'] = lsoa_merge1['Public Order crime_count']/lsoa_merge1['All usual residents']
-lsoa_merge1['Property crime_density'] = lsoa_merge1['Property crime_count']/lsoa_merge1['All usual residents']
-lsoa_merge1['Violent crime_density'] = lsoa_merge1['Violent crime_count']/lsoa_merge1['All usual residents']
-lsoa_merge1['area'] = lsoa_merge1['geometry'].area
-lsoa_merge1['pop_density'] = lsoa_merge1['All usual residents']/lsoa_merge1['area']
+lsoa_merge1["crime_density"] = (
+    lsoa_merge1["crime_count"] / lsoa_merge1["All usual residents"]
+)
+lsoa_merge1["listing_density"] = (
+    lsoa_merge1["listing_count"] / lsoa_merge1["All Households"]
+)
+lsoa_merge1["Private room_density"] = (
+    lsoa_merge1["Private room_count"] / lsoa_merge1["All Households"]
+)
+lsoa_merge1["Entire home/apt_density"] = (
+    lsoa_merge1["Entire home/apt_count"] / lsoa_merge1["All Households"]
+)
+lsoa_merge1["Public Order crime_density"] = (
+    lsoa_merge1["Public Order crime_count"] / lsoa_merge1["All usual residents"]
+)
+lsoa_merge1["Property crime_density"] = (
+    lsoa_merge1["Property crime_count"] / lsoa_merge1["All usual residents"]
+)
+lsoa_merge1["Violent crime_density"] = (
+    lsoa_merge1["Violent crime_count"] / lsoa_merge1["All usual residents"]
+)
+lsoa_merge1["area"] = lsoa_merge1["geometry"].area
+lsoa_merge1["pop_density"] = lsoa_merge1["All usual residents"] / lsoa_merge1["area"]
 ```
 
 ```{python}
 regressiondata = lsoa_merge1.copy()
 # Keep ones needed for regression
-regressiondata = regressiondata.loc[:,[col for col in regressiondata.columns if 'density' in col]]
+regressiondata = regressiondata.loc[
+    :, [col for col in regressiondata.columns if "density" in col]
+]
 ```
 
 ```{python}
 # Function to approximate what a normal distribution would be from a dataset
 # Adapted from CASA0013
 
-def normal_from_dist(series):  #define function name and required arguments (in this case a pandas series)
-    mu = series.mean()         #calculate the mean of our data
-    sd = series.std()          #calculate the standard deviation of our data
-    n  = len(series)           #count how many observations are in our data
-    s = np.random.normal(mu, sd, n)   #use the parameters of the data just calculated to generate n random numbers, drawn from a normal distributions 
-    return s                   #return this set of random numbers
+
+def normal_from_dist(
+    series,
+):  # define function name and required arguments (in this case a pandas series)
+    mu = series.mean()  # calculate the mean of our data
+    sd = series.std()  # calculate the standard deviation of our data
+    n = len(series)  # count how many observations are in our data
+    s = np.random.normal(
+        mu, sd, n
+    )  # use the parameters of the data just calculated to generate n random numbers, drawn from a normal distributions
+    return s  # return this set of random numbers
 ```
 
 ```{python}
@@ -972,31 +1075,46 @@ def normal_from_dist(series):  #define function name and required arguments (in 
 
 ```{python}
 # Log of the variables social rent, private room, entire home/apt, pop_density, etc.
-cols = ['social_rent_density','Private room_density','Entire home/apt_density','pop_density','listing_density','crime_density','listing_density','Public Order crime_density','Property crime_density','Violent crime_density']
+cols = [
+    "social_rent_density",
+    "Private room_density",
+    "Entire home/apt_density",
+    "pop_density",
+    "listing_density",
+    "crime_density",
+    "listing_density",
+    "Public Order crime_density",
+    "Property crime_density",
+    "Violent crime_density",
+]
 for col in cols:
     # remove rows (LSOAs) with no airbnbs
     c = regressiondata[col].sort_values().unique()[1]
-    regressiondata[col+'_log'] = np.log(regressiondata[col]+c)
+    regressiondata[col + "_log"] = np.log(regressiondata[col] + c)
 # Drop original columns
-regressiondata.drop(cols,axis=1,inplace=True)
+regressiondata.drop(cols, axis=1, inplace=True)
 ```
 
 ```{python}
 test_cols_df = regressiondata.copy()
 
-fig, axes = plt.subplots(5,3, figsize=(7, 7))
+fig, axes = plt.subplots(5, 3, figsize=(7, 7))
 axflat = axes.flatten()
-for i, ax in enumerate(np.resize(axflat,axflat.size-2)):
-    sns.distplot(test_cols_df.iloc[:,i], ax=ax)
-    sns.kdeplot(normal_from_dist(test_cols_df.iloc[:,i]), color='r', fill=True, ax=ax)
-    ax.set_title(test_cols_df.columns[i],fontsize=7)
-    ax.set_xlabel('')
-    ax.set_ylabel('')
-    ax.set_yticklabels('')
+for i, ax in enumerate(np.resize(axflat, axflat.size - 2)):
+    sns.distplot(test_cols_df.iloc[:, i], ax=ax)
+    sns.kdeplot(normal_from_dist(test_cols_df.iloc[:, i]), color="r", fill=True, ax=ax)
+    ax.set_title(test_cols_df.columns[i], fontsize=7)
+    ax.set_xlabel("")
+    ax.set_ylabel("")
+    ax.set_yticklabels("")
     sns.despine()
 for ax in axflat[-2:]:
-    ax.axis('off')
-fig.suptitle('Figure 6: Regression dependent and indenpendent variables (post-log-transformation)',x=0.5,y=0)
+    ax.axis("off")
+fig.suptitle(
+    "Figure 6: Regression dependent and indenpendent variables (post-log-transformation)",
+    x=0.5,
+    y=0,
+)
 plt.tight_layout()
 plt.show()
 ```
@@ -1005,7 +1123,9 @@ plt.show()
 #| output: false
 
 # drop crime related columns to check for multicollinearity
-regressiondata_VIF = regressiondata.drop([col for col in regressiondata.columns if 'crime' in col],axis=1)
+regressiondata_VIF = regressiondata.drop(
+    [col for col in regressiondata.columns if "crime" in col], axis=1
+)
 # drop columns with high VIF
 regressiondata_VIF = drop_column_using_vif_(regressiondata_VIF)
 selected_cols = regressiondata_VIF.columns.tolist()
@@ -1019,12 +1139,14 @@ We found some key predictor variables to be statistically significant, most nota
 - Meanwhile, **Private room** interestingly only has a notable and significant effect on public order crime and violent crime. 
 
 ```{python}
-models =[]
+models = []
 results = []
-for i in ['crime_','Property crime_', 'Violent crime_', 'Public Order crime_']:
+for i in ["crime_", "Property crime_", "Violent crime_", "Public Order crime_"]:
     # OLS model
-    OLS = sm.OLS(endog=regressiondata[i+'density_log'], 
-                      exog=sm.add_constant(regressiondata[selected_cols]))
+    OLS = sm.OLS(
+        endog=regressiondata[i + "density_log"],
+        exog=sm.add_constant(regressiondata[selected_cols]),
+    )
     OLSmodel = OLS.fit()
     models.append(OLS)
     results.append(OLSmodel)
@@ -1047,26 +1169,31 @@ With this, we can conclude that there is a positive effect of the density of Air
 
 # Create spatial weights matrix
 w = Queen.from_dataframe(lsoa)
-w.transform = 'r'
+w.transform = "r"
 
 residuals = results[0].resid
 moran = Moran(residuals, w)
 moran_loc = Moran_Local(residuals, w)
-lisa_cluster(moran_loc, lsoa, p=0.05, figsize = (7,5),legend_kwds={'loc': 'lower right'})
-plt.title(f'Residuals Moran\'s I - {models[0].endog_names}\nGlobal stat = {moran.I:.2f}')
+lisa_cluster(
+    moran_loc, lsoa, p=0.05, figsize=(7, 5), legend_kwds={"loc": "lower right"}
+)
+plt.title(f"Residuals Moran's I - {models[0].endog_names}\nGlobal stat = {moran.I:.2f}")
 plt.tight_layout()
 plt.show()
 
-fig, axes = plt.subplots(1, 3, figsize=(7,3))
+fig, axes = plt.subplots(1, 3, figsize=(7, 3))
 ax = axes.flatten()
 for i in range(3):
     residuals = results[i].resid
     moran = Moran(residuals, w)
     moran_loc = Moran_Local(residuals, w)
-    lisa_cluster(moran_loc, lsoa, p=0.05,ax=ax[i],legend=False)
-    ax[i].set_title(f'Residuals Local Moran\'s I - {models[i+1].endog_names}\nGlobal stat = {moran.I:.2f}',fontsize=5)
+    lisa_cluster(moran_loc, lsoa, p=0.05, ax=ax[i], legend=False)
+    ax[i].set_title(
+        f"Residuals Local Moran's I - {models[i+1].endog_names}\nGlobal stat = {moran.I:.2f}",
+        fontsize=5,
+    )
 
-fig.suptitle('Figure 7: Residual Morans I - by crime category',x=0.5,y=0.1)
+fig.suptitle("Figure 7: Residual Morans I - by crime category", x=0.5, y=0.1)
 plt.tight_layout()
 plt.show()
 ```
@@ -1080,12 +1207,12 @@ Using a Geographically Weighted Regression, we can further visualise where preci
 
 ```{python}
 # Prepare dataset inputs - Crime
-g_y = regressiondata['crime_density_log'].values.reshape((-1,1))
+g_y = regressiondata["crime_density_log"].values.reshape((-1, 1))
 g_X = regressiondata[selected_cols].values
 lsoa_cen = lsoa.centroid.get_coordinates()
-u = lsoa_cen['x']
-v = lsoa_cen['y']
-g_coords = list(zip(u,v))
+u = lsoa_cen["x"]
+v = lsoa_cen["y"]
+g_coords = list(zip(u, v))
 
 g_X = (g_X - g_X.mean(axis=0)) / g_X.std(axis=0)
 g_y = (g_y - g_y.mean(axis=0)) / g_y.std(axis=0)
@@ -1094,26 +1221,26 @@ g_y = (g_y - g_y.mean(axis=0)) / g_y.std(axis=0)
 # gwr_selector = Sel_BW(g_coords, g_y, g_X)
 # gwr_bw = gwr_selector.search(bw_min=2)
 # print(gwr_bw)
-gwr_bw = 522 # I calibrated this 
+gwr_bw = 522  # I calibrated this
 gwr_results = GWR(g_coords, g_y, g_X, gwr_bw).fit()
 
 # Add Paramaters back to geo dataframe for mapping
-lsoa['gwr_intercept'] = gwr_results.params[:,0]
-for i in range(len(selected_cols)-1):
-    lsoa['gwr_'+selected_cols[i]] = gwr_results.params[:,i+1]
-    
+lsoa["gwr_intercept"] = gwr_results.params[:, 0]
+for i in range(len(selected_cols) - 1):
+    lsoa["gwr_" + selected_cols[i]] = gwr_results.params[:, i + 1]
+
 # Filter Insignificant coefficients alpha 0.05
-gwr_filtered_t = gwr_results.filter_tvals(alpha = 0.05)
+gwr_filtered_t = gwr_results.filter_tvals(alpha=0.05)
 ```
 
 ```{python}
 # Prepare dataset inputs - Property Crime
-g_y1 = regressiondata['Property crime_density_log'].values.reshape((-1,1))
+g_y1 = regressiondata["Property crime_density_log"].values.reshape((-1, 1))
 g_X = regressiondata[selected_cols].values
 lsoa_cen = lsoa.centroid.get_coordinates()
-u = lsoa_cen['x']
-v = lsoa_cen['y']
-g_coords = list(zip(u,v))
+u = lsoa_cen["x"]
+v = lsoa_cen["y"]
+g_coords = list(zip(u, v))
 
 g_X = (g_X - g_X.mean(axis=0)) / g_X.std(axis=0)
 g_y1 = (g_y1 - g_y1.mean(axis=0)) / g_y1.std(axis=0)
@@ -1122,42 +1249,70 @@ g_y1 = (g_y1 - g_y1.mean(axis=0)) / g_y1.std(axis=0)
 # gwr_selector1 = Sel_BW(g_coords, g_y1, g_X)
 # gwr_bw1 = gwr_selector1.search(bw_min=2)
 # print(gwr_bw1)
-gwr_bw1 = 560 # I calibrated this 
+gwr_bw1 = 560  # I calibrated this
 gwr_results1 = GWR(g_coords, g_y1, g_X, gwr_bw1).fit()
 
 # Add Paramaters back to geo dataframe for mapping
-lsoa['gwr_intercept_prop_'] = gwr_results1.params[:,0]
-for i in range(len(selected_cols)-1):
-    lsoa['gwr_prop_'+selected_cols[i]] = gwr_results1.params[:,i+1]
+lsoa["gwr_intercept_prop_"] = gwr_results1.params[:, 0]
+for i in range(len(selected_cols) - 1):
+    lsoa["gwr_prop_" + selected_cols[i]] = gwr_results1.params[:, i + 1]
 
 # Filter Insignificant coefficients alpha 0.05
-gwr_prop_filtered_t = gwr_results1.filter_tvals(alpha = 0.05)
+gwr_prop_filtered_t = gwr_results1.filter_tvals(alpha=0.05)
 ```
 
 ```{python}
 # Map them both, sig coeff only
 # Adapted from https://deepnote.com/@carlos-mendez/PYTHON-GWR-and-MGWR-71dd8ba9-a3ea-4d28-9b20-41cc8a282b7a
+import matplotlib.colors as mcolors
 
-type = ['Private room','Entire home/apt']
-fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(8,8))
-for i in range(len(type)): 
-    
+type = ["Private room", "Entire home/apt"]
+fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(8, 8))
+for i in range(len(type)):
     # All crime
-    lsoa.plot(column=f'gwr_{type[i]}_density_log', cmap = 'coolwarm', linewidth=0.001, scheme = 'naturalbreaks', k=5, legend=True, legend_kwds={'bbox_to_anchor':(1.10, 0.2)},  ax=axes[i,0])
-    lsoa[gwr_filtered_t[:,i+6] == 0].plot(color='white', linewidth=0.001, edgecolor='white', ax=axes[i,0]) #6th variables in variable array
-    boros.plot(edgecolor='red', facecolor='None',linewidth=0.1,ax=axes[i,0])
-    
+    lsoa.plot(
+        column=f"gwr_{type[i]}_density_log",
+        cmap="RdBu_r",
+        linewidth=0.001,
+        scheme="naturalbreaks",
+        k=4,
+        legend=True,
+        legend_kwds={"bbox_to_anchor": (1.10, 0.2)},
+        ax=axes[i, 0],
+    )
+    lsoa[gwr_filtered_t[:, i + 6] == 0].plot(
+        color="white", linewidth=0.001, edgecolor="white", ax=axes[i, 0]
+    )  # 6th variables in variable array
+    boros.plot(edgecolor="red", facecolor="None", linewidth=0.1, ax=axes[i, 0])
+
     # Property crime
-    lsoa.plot(column=f'gwr_prop_{type[i]}_density_log', cmap = 'coolwarm', linewidth=0.001, scheme = 'naturalbreaks', k=5, legend=True, legend_kwds={'bbox_to_anchor':(1.10, 0.2)},  ax=axes[i,1])
-    lsoa[gwr_prop_filtered_t[:,i+6] == 0].plot(color='white', linewidth=0.001, edgecolor='white', ax=axes[i,1]) #6th variables in variable array
-    boros.plot(edgecolor='red', facecolor='None',linewidth=0.1,ax=axes[i,1])
-    
-    axes[i,0].axis("off")
-    axes[i,1].axis("off")
-    axes[i,0].set_title(f'({i+1}a) {type[i]} vs. Crime, significant coeffs', fontsize=8)
-    axes[i,1].set_title(f'({i+1}b) {type[i]} vs. Property Crime, significant coeffs', fontsize=8)
+    lsoa.plot(
+        column=f"gwr_prop_{type[i]}_density_log",
+        cmap="RdBu_r",
+        linewidth=0.001,
+        scheme="naturalbreaks",
+        k=4,
+        legend=True,
+        legend_kwds={"bbox_to_anchor": (1.10, 0.2)},
+        ax=axes[i, 1],
+    )
+    lsoa[gwr_prop_filtered_t[:, i + 6] == 0].plot(
+        color="white", linewidth=0.001, edgecolor="white", ax=axes[i, 1]
+    )  # 6th variables in variable array
+    boros.plot(edgecolor="red", facecolor="None", linewidth=0.1, ax=axes[i, 1])
+
+    axes[i, 0].axis("off")
+    axes[i, 1].axis("off")
+    axes[i, 0].set_title(
+        f"({i+1}a) {type[i]} vs. Crime, significant coeffs", fontsize=8
+    )
+    axes[i, 1].set_title(
+        f"({i+1}b) {type[i]} vs. Property Crime, significant coeffs", fontsize=8
+    )
 plt.tight_layout()
-fig.suptitle('Figure 8: Geographically weighted effect of short-lets on crime',x=0.5,y=0)
+fig.suptitle(
+    "Geographically weighted effect of vacation homes on crime", x=0.5, y=0
+)
 plt.show()
 ```
 
@@ -1185,31 +1340,33 @@ OLS Regression results for each of the four dependent variables:
 
 for i in results:
     print(i.summary())
-    print('\n')
+    print("\n")
 ```
 
 *Note:* our log transformation has greatly treated the Heteroscedasticity of the variables, although some do remain without greatly affecting the OLS regression results.
 
 ```{python}
 # Residuals vs. Fitted plot (All Crime model)
-fig,axes = plt.subplots(1,3,figsize=(7,2.5))
+fig, axes = plt.subplots(1, 3, figsize=(7, 2.5))
 # Plot the residuals vs fitted values on ax1
-axes[0].scatter(results[0].fittedvalues, results[0].resid, alpha = 0.5, s=5)
-axes[0].set_xlabel(f'Fitted values')
-axes[0].set_ylabel('Residual')
-axes[0].set_title(f'Residual vs. Fitted Plot for {models[0].endog_names}',fontsize=7)
+axes[0].scatter(results[0].fittedvalues, results[0].resid, alpha=0.5, s=5)
+axes[0].set_xlabel(f"Fitted values")
+axes[0].set_ylabel("Residual")
+axes[0].set_title(f"Residual vs. Fitted Plot for {models[0].endog_names}", fontsize=7)
 
 # QQplot on ax2
-sm.qqplot(results[0].resid, line='s', markersize=1,ax=axes[1])
-axes[1].set_title(f'QQ Plot for {models[0].endog_names}',fontsize=7)
-        
+sm.qqplot(results[0].resid, line="s", markersize=1, ax=axes[1])
+axes[1].set_title(f"QQ Plot for {models[0].endog_names}", fontsize=7)
+
 # Residual distribution on ax3
 axes[2].hist(results[0].resid, bins=50)
-axes[2].set_xlabel('Residual')
-axes[2].set_ylabel('Frequency')
-axes[2].set_title(f'Residual Distribution for {models[0].endog_names}',fontsize=7)
+axes[2].set_xlabel("Residual")
+axes[2].set_ylabel("Frequency")
+axes[2].set_title(f"Residual Distribution for {models[0].endog_names}", fontsize=7)
 
-fig.suptitle('Figure 9: Residual Analysis to confirm OLS assumptions (All Crime)',x=0.5,y=0)
+fig.suptitle(
+    "Figure 9: Residual Analysis to confirm OLS assumptions (All Crime)", x=0.5, y=0
+)
 plt.tight_layout()
 plt.show()
 ```
@@ -1220,18 +1377,18 @@ plt.show()
 # Spatial Error Model to deal with spatial autocorrelation
 
 X = regressiondata[selected_cols].to_numpy()
-y = regressiondata['crime_density_log'].to_numpy()
+y = regressiondata["crime_density_log"].to_numpy()
 
 # Create a Queen spatial weights matrix
 w = Queen.from_dataframe(lsoa)
-w.transform = 'r'
+w.transform = "r"
 
 mod1 = GM_Error_Het(
     y=y,
     x=X,
     w=w,
-    name_y = 'crime_density_log',
-    name_x = regressiondata[selected_cols].columns.tolist()
+    name_y="crime_density_log",
+    name_x=regressiondata[selected_cols].columns.tolist(),
 )
 print(mod1.summary)
 ```
